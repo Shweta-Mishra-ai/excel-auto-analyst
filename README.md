@@ -33,7 +33,7 @@ Drag-and-drop analysis for specific deep-dives.
 * **📈 Instant Dashboards:** Automatically generates KPI cards, Bar Charts, and Pie Charts based on data types.
 * **🎨 Custom Reports:** "Drag-and-drop" style interface to build your own comparison charts.
 * **🤖 AI Insights:** Logic-based narrative engine that explains trends and volatility in plain English.
-* **🗣️ Chat with Data:** Ask questions in plain English (e.g., "Show me sales by region") powered by **Llama3** via **Groq**.
+* **🗣️ Chat with Data:** Ask questions in plain English (e.g., "Show me sales by region") and get clear, non-technical answers. No code or complex jargon—just the insights you need. Powered by **Llama3** via **Groq**.
 
 ## 🛠️ Tech Stack
 
@@ -57,6 +57,16 @@ Drag-and-drop analysis for specific deep-dives.
     ```bash
     streamlit run app.py
     ```
+
+## 🔑 Configuration (Important!)
+        
+This app requires a **Groq API Key** to run the "Chat with Data" feature.
+
+1.  **Get a Free Key:** [Groq Cloud Console](https://console.groq.com/keys)
+2.  **Configure Locally:**
+    *   Open `.streamlit/secrets.toml`
+    *   Paste your key: `GROQ_API_KEY = "gsk_..."`
+    *   *Note: This file is ignored by Git to keep your key safe.*
 
 ## ☁️ Deployment
 

@@ -212,63 +212,74 @@ if uploaded_file is not None:
             if 'df_cleaned' in st.session_state:
                 df_active = st.session_state['df_cleaned']
 
-                # API Key Handling: Check Secrets first, then Fallback to Input
-                try:
-                    # Try to retrieve from Streamlit Secrets (for Cloud Deployment)
+                # API Key Handling
+                groq_key = None
+                
+                # 1. Try Secrets first
+                if "GROQ_API_KEY" in st.secrets:
                     groq_key = st.secrets["GROQ_API_KEY"]
-                except (FileNotFoundError, KeyError):
-                    # If not found, ask user for input
-                    with st.expander("🔑 Setup: Enter LLM API Key", expanded=True):
-                        st.info("Get your Free API Key from [Groq Cloud](https://console.groq.com/keys).")
-                        groq_key = st.text_input("Groq API Key", type="password", help="The system uses Llama3-70b for fast analysis.")
+
+                # 2. Key must be in secrets
+                if not groq_key:
+                    st.error("⚠️ GROQ_API_KEY not found in secrets. Please configure it in .streamlit/secrets.toml")
+                    st.stop()
 
                 if groq_key:
                     # Initialize Groq Client
-                    try:
+                    try: 
                         client = Groq(api_key=groq_key)
-                        
-                        # Connection Status
-                        st.success("✅ AI Connected & Ready")
-                        
-                        # Initialize Chat History
-                        if "messages" not in st.session_state:
-                            st.session_state.messages = []
+                    except Exception as e:
+                        if "401" in str(e) or "invalid_api_key" in str(e):
+                             st.error("🚨 Error: Invalid API Key")
+                             st.info("The API key in `.streamlit/secrets.toml` is invalid.")
+                             st.markdown("**Fix:** Open `.streamlit/secrets.toml` and paste your actual Groq API key (starts with `gsk_`).")
+                             st.stop()
+                        else:
+                            st.error(f"Failed to initialize Groq client: {e}")
+                            st.stop()
+                    
+                    # Initialize Chat History
+                    if "messages" not in st.session_state:
+                        st.session_state.messages = []
 
-                        # Display History
-                        for message in st.session_state.messages:
-                            with st.chat_message(message["role"]):
-                                st.markdown(message["content"])
+                    # Display History
+                    for message in st.session_state.messages:
+                        with st.chat_message(message["role"]):
+                            st.markdown(message["content"])
 
-                        # Chat Interface
-                        prompt = st.chat_input("Ask something (e.g., 'Plot top 5 sales by region')")
-                        
-                        if prompt:
-                            # 1. User Message
-                            st.session_state.messages.append({"role": "user", "content": prompt})
-                            with st.chat_message("user"):
-                                st.markdown(prompt)
+                    # Chat Interface
+                    prompt = st.chat_input("Ask something (e.g., 'Plot top 5 sales by region')")
+                    
+                    if prompt:
+                        # 1. User Message
+                        st.session_state.messages.append({"role": "user", "content": prompt})
+                        with st.chat_message("user"):
+                            st.markdown(prompt)
 
-                            # 2. Assistant Logic
-                            with st.chat_message("assistant"):
-                                with st.spinner("🤖 Thinking & Coding..."):
-                                    columns = list(df_active.columns)
-                                    head_data = df_active.head(3).to_string()
-                                    
-                                    system_prompt = f"""
-                                    You are a Python Data Analyst. Your goal is to answer questions about a pandas DataFrame 'df'.
-                                    Columns: {columns}
-                                    Sample: {head_data}
-                                    
-                                    RULES:
-                                    1. If asked for value (e.g. "Total Sales"), use `print()` to output it.
-                                    2. If asked for plot, create Plotly fig `fig`.
-                                    3. Return ONLY valid Python code inside ```python``` block.
-                                    4. Import pandas as pd, plotly.express as px.
-                                    """
-                                    
+                        # 2. Assistant Logic
+                        with st.chat_message("assistant"):
+                            with st.spinner("🤖 Thinking & Coding..."):
+                                columns = list(df_active.columns)
+                                head_data = df_active.head(3).to_string()
+                                
+                                system_prompt = f"""
+                                You are a Python Data Analyst. Your goal is to answer questions about a pandas DataFrame 'df'.
+                                Columns: {columns}
+                                Sample: {head_data}
+                                
+                                RULES:
+                                1. You MUST use `print()` to output the answer. The user CANNOT see variables, only what you print.
+                                2. Output the result in SIMPLE, PLAIN ENGLISH. Avoid technical jargon.
+                                3. DO NOT print raw DataFrames, dictionaries, or lists.
+                                4. DO NOT print the Plotly figure object. Just create it as `fig`.
+                                5. Return ONLY valid Python code inside ```python``` block.
+                                """
+                                
+                                try:
                                     response = client.chat.completions.create(
                                         messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-                                        model="llama3-70b-8192",
+                                        model="llama-3.3-70b-versatile",
+                                        temperature=0
                                     )
                                     
                                     raw_content = response.choices[0].message.content
@@ -281,7 +292,7 @@ if uploaded_file is not None:
                                         code = raw_content.split("```")[1].split("```")[0].strip()
                                     
                                     # Execution & Capture
-                                    local_scope = {"df": df_active, "pd": pd, "px": px}
+                                    local_scope = {"df": df_active, "pd": pd, "px": px, "plt": plt}
                                     output_buffer = StringIO()
                                     
                                     try:
@@ -290,6 +301,10 @@ if uploaded_file is not None:
                                         
                                         output_text = output_buffer.getvalue()
                                         
+                                        # Filter out large JSON dumps (likely accidentally printed figures)
+                                        if output_text.strip().startswith("{") and len(output_text) > 100:
+                                            output_text = "*(Raw data output hidden)*"
+
                                         # Display Output
                                         if output_text:
                                             st.markdown(output_text)
@@ -302,21 +317,20 @@ if uploaded_file is not None:
                                             st.session_state.messages.append({"role": "assistant", "content": "(Chart Generated)"})
                                         
                                         if not output_text and "fig" not in local_scope:
-                                            st.warning("Query ran but produced no output. Try asking to 'print' the answer.")
+                                            st.warning("The AI generated code but didn't output a text answer. Try asking it to 'print' the result.")
 
-                                        with st.expander("See Code"):
+                                        # Only show code in debug expander, NOT in main chat
+                                        with st.expander("Debug: View Generated Code"):
                                             st.code(code, language='python')
 
                                     except Exception as e:
                                         st.error(f"Code Execution Error: {e}")
-                                    
-                    except Exception as e:
-                        st.error(f"Error initializing AI: {e}")
-                else:
-                    st.warning("⚠️ Please enter a valid API Key to start chatting.")
-            
-            else:
-                st.warning("Please go to the Home tab and check 'Enable Auto-Cleaning' first.")
+                                        st.code(code, language='python') # Show code so user can debug
+                                
+                                except Exception as e:
+                                    st.error(f"Groq API Error: {e}")
+
+
 
 else:
     # Landing Page when no file is uploaded
