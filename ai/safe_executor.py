@@ -161,9 +161,33 @@ def _exec_with_timeout(byte_code: object, scope: dict, timeout: int) -> None:
     """
     Execute compiled code with timeout.
     Windows: no SIGALRM — use threading timeout instead.
-    Linux/Mac: use signal.SIGALRM (more reliable).
+    Linux/Mac: use signal.SIGALRM (more reliable in main thread),
+               fall back to threading if not running in the main thread.
     """
-    if _IS_WINDOWS:
+    use_thread_fallback = _IS_WINDOWS
+
+    if not _IS_WINDOWS:
+        import signal
+
+        def _handler(signum: int, frame: object) -> None:
+            raise TimeoutError(f"Code timed out after {timeout}s.")
+
+        try:
+            old = signal.signal(signal.SIGALRM, _handler)
+            has_signal = True
+        except ValueError:
+            has_signal = False
+            use_thread_fallback = True
+
+        if has_signal:
+            signal.alarm(timeout)
+            try:
+                exec(byte_code, scope)  # noqa: S102 # nosec B102
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, old)
+
+    if use_thread_fallback:
         import threading
 
         result = {"error": None}
@@ -181,19 +205,6 @@ def _exec_with_timeout(byte_code: object, scope: dict, timeout: int) -> None:
             raise TimeoutError(f"Code timed out after {timeout}s.")
         if result["error"]:
             raise result["error"]
-    else:
-        import signal
-
-        def _handler(signum: int, frame: object) -> None:
-            raise TimeoutError(f"Code timed out after {timeout}s.")
-
-        old = signal.signal(signal.SIGALRM, _handler)
-        signal.alarm(timeout)
-        try:
-            exec(byte_code, scope)  # noqa: S102 # nosec B102
-        finally:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, old)
 
 
 # ── Public API ────────────────────────────────────────────────────

@@ -110,3 +110,18 @@ class TestExecuteSafe:
     def test_no_figure_when_none_created(self, sample_df):
         r = execute_safe("print('hello')", sample_df)
         assert r.figure is None
+
+    def test_signal_value_error_fallback(self, sample_df):
+        """Verify that if signal.signal raises ValueError (e.g. running in a thread), we fall back to threading and succeed."""
+        import sys
+        from unittest.mock import patch
+
+        if sys.platform != "win32":
+            with patch("signal.signal", side_effect=ValueError("signal only works in main thread")):
+                r = execute_safe("print(df['sales'].mean())", sample_df)
+                assert r.success is True
+                assert "200" in r.output
+        else:
+            r = execute_safe("print(df['sales'].mean())", sample_df)
+            assert r.success is True
+            assert "200" in r.output
