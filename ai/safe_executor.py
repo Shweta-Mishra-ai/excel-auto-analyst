@@ -82,11 +82,11 @@ def _validate_ast(code: str) -> str | None:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                base_mod = alias.name.split('.')[0]
+                base_mod = alias.name.split(".")[0]
                 if base_mod not in allowed_mods:
                     return f"Import of '{base_mod}' is not permitted. All allowed libraries are pre-imported."
         elif isinstance(node, ast.ImportFrom):
-            base_mod = node.module.split('.')[0] if node.module else ""
+            base_mod = node.module.split(".")[0] if node.module else ""
             if base_mod not in allowed_mods:
                 return f"Import from '{base_mod}' is not permitted. All allowed libraries are pre-imported."
 
@@ -251,9 +251,10 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
 
     # Use AST to strip imports securely
     class ImportStripper(ast.NodeTransformer):
-        def visit_Import(self, node):
+        def visit_Import(self, node):  # noqa: N802
             return None
-        def visit_ImportFrom(self, node):
+
+        def visit_ImportFrom(self, node):  # noqa: N802
             return None
 
     try:
@@ -261,9 +262,8 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
         tree = ImportStripper().visit(tree)
         ast.fix_missing_locations(tree)
         cleaned = ast.unparse(tree)
-    except Exception:
-        pass  # Fallback to the original cleaned if unparse fails for some reason
-
+    except Exception:  # noqa: S110
+        pass
 
     scope = _build_safe_scope(df)
     buffer = StringIO()

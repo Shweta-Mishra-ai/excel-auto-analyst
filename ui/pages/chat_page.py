@@ -138,6 +138,7 @@ def render() -> None:
 
             # Check if it's purely conversational text (no code fences and not parseable as code)
             import ast
+
             is_conversational = False
             if "```python" not in raw_response and "```" not in raw_response:
                 try:

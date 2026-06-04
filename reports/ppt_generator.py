@@ -381,8 +381,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
 
     # ─── Slide 4.5: Data Visualizations ────────────────────────────
     import matplotlib.pyplot as plt
-    plt.style.use('dark_background')
-    
+
+    plt.style.use("dark_background")
+
     slide = prs.slides.add_slide(blank_layout)
     add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
     add_rect(slide, 0, 0, 13.33, 1.0, CARD_BG)
@@ -401,48 +402,70 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
 
     try:
         fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
-        fig.patch.set_facecolor('#0B0F19')
+        fig.patch.set_facecolor("#0B0F19")
         for ax in axes:
-            ax.set_facecolor('#1E293B')
-            ax.tick_params(colors='#94A3B8')
+            ax.set_facecolor("#1E293B")
+            ax.tick_params(colors="#94A3B8")
             for spine in ax.spines.values():
-                spine.set_color('#334155')
+                spine.set_color("#334155")
 
         # Histogram of metric column
         metric_series = ri.df[ri.metric_col].dropna()
-        axes[0].hist(metric_series, bins=30, color='#0D9488', edgecolor='white', linewidth=0.5)
-        axes[0].set_title(f'Distribution of {ri.metric_col}', color='white', fontsize=14, pad=15)
-        axes[0].set_ylabel('Frequency', color='#94A3B8')
+        axes[0].hist(
+            metric_series, bins=30, color="#0D9488", edgecolor="white", linewidth=0.5
+        )
+        axes[0].set_title(
+            f"Distribution of {ri.metric_col}", color="white", fontsize=14, pad=15
+        )
+        axes[0].set_ylabel("Frequency", color="#94A3B8")
 
         # Boxplot of top 3 numeric columns
         top_num_cols = ri.profile.numeric_columns[:3]
         if top_num_cols:
             plot_data = [ri.df[c].dropna() for c in top_num_cols]
             bp = axes[1].boxplot(plot_data, patch_artist=True, tick_labels=top_num_cols)
-            for box in bp['boxes']:
-                box.set_facecolor('#0D9488')
-                box.set_edgecolor('white')
-            for whisker in bp['whiskers']:
-                whisker.set_color('white')
-            for cap in bp['caps']:
-                cap.set_color('white')
-            for median in bp['medians']:
-                median.set_color('#DC2626')
+            for box in bp["boxes"]:
+                box.set_facecolor("#0D9488")
+                box.set_edgecolor("white")
+            for whisker in bp["whiskers"]:
+                whisker.set_color("white")
+            for cap in bp["caps"]:
+                cap.set_color("white")
+            for median in bp["medians"]:
+                median.set_color("#DC2626")
                 median.set_linewidth(2)
-            axes[1].set_title('Boxplots of Key Metrics', color='white', fontsize=14, pad=15)
-        
+            axes[1].set_title(
+                "Boxplots of Key Metrics", color="white", fontsize=14, pad=15
+            )
+
         plt.tight_layout()
-        
+
         buf = io.BytesIO()
-        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor=fig.get_facecolor())
+        fig.savefig(
+            buf,
+            format="png",
+            dpi=150,
+            bbox_inches="tight",
+            facecolor=fig.get_facecolor(),
+        )
         buf.seek(0)
-        
+
         from pptx.util import Inches
+
         slide.shapes.add_picture(buf, Inches(0.5), Inches(1.8), width=Inches(12.33))
         plt.close(fig)
     except Exception as e:
         logger.warning(f"Failed to generate visualization slide: {e}")
-        add_text_box(slide, "Could not generate visualizations.", 0.5, 3, 10, 1, font_size=16, color=RED)
+        add_text_box(
+            slide,
+            "Could not generate visualizations.",
+            0.5,
+            3,
+            10,
+            1,
+            font_size=16,
+            color=RED,
+        )
 
     # ─── Slide 5: Outlier Analysis ────────────────────────────────
     slide = prs.slides.add_slide(blank_layout)
