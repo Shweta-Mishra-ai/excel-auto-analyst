@@ -1,0 +1,24 @@
+{
+  "version": 2,
+  "name": "excel-auto-analyst",
+  "comments": {
+    "note": "Streamlit runs as a Python server — use Railway for the app.",
+    "vercel_use": "Vercel is better suited for static frontends or Next.js.",
+    "recommendation": "Deploy Streamlit app on Railway. Use Vercel for a landing page."
+  },
+  "builds": [
+    {
+      "src": "landing/index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/landing/index.html"
+    }
+  ],
+  "env": {
+    "APP_URL": "https://your-app.railway.app"
+  }
+}

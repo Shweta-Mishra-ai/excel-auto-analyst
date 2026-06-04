@@ -1,0 +1,4 @@
+# System packages needed by python-pptx and other deps
+# Streamlit Community Cloud reads this file automatically
+libxml2-dev
+libxslt1-dev

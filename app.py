@@ -1,344 +1,273 @@
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import os
-from groq import Groq
-import matplotlib.pyplot as plt
-import sys
-from io import StringIO
-from contextlib import redirect_stdout
+"""
+app.py — Excel Auto-Analyst v2.0
+─────────────────────────────────────────────────────────────────
+Thin router only. Zero business logic here.
+Matches original navigation: Home | Dashboard | Custom | Chat + PPT Report (new)
+"""
 
-# 1. Configuration
-# Version: 2.0.1 - Chat with Data (No external dependencies)
-st.set_page_config(
-    page_title="Excel Auto-Analyst", 
-    page_icon="📊", 
-    layout="wide"
+from __future__ import annotations
+
+import logging
+
+import streamlit as st
+
+from config.settings import CONFIG
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
-# 2. Sidebar Setup (The Navigation)
-with st.sidebar:
-    st.title("📊 Auto-Analyst")
-    st.write("Upload your data and navigate through the tabs below.")
-    
-    # File Uploader
-    uploaded_file = st.file_uploader("Upload Excel/CSV", type=['csv', 'xlsx'])
-    
-    # Navigation Menu
-    page = st.radio("Navigate to:", ["🏠 Home & Data Cleaning", "📈 Auto-Dashboard", "🎨 Custom Analysis", "🗣️ Chat with Data"])
-    
-    st.info("Built with Streamlit & Python")
+st.set_page_config(
+    page_title=CONFIG.title,
+    page_icon=CONFIG.page_icon,
+    layout=CONFIG.layout,
+    initial_sidebar_state="expanded",
+)
 
-# Function to load data (Cached to prevent reloading on every click)
-@st.cache_data
-def load_data(file):
+
+def _init_session_state() -> None:
+    defaults = {
+        "load_result": None,
+        "profile": None,
+        "clean_result": None,
+        "chat_history": [],
+        "current_page": "🏠 Home & Data Cleaning",
+    }
+    for key, val in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = val
+
+
+def _render_error(error: Exception) -> None:
+    st.error(
+        f"**Something went wrong:** {type(error).__name__}: {error}\n\n"
+        "Try refreshing the page or uploading a different file."
+    )
+    if st.button("Clear error & restart"):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+
+
+def _render_sidebar() -> str:
+    with st.sidebar:
+        st.title("📊 Auto-Analyst")
+        st.write("Upload your data and navigate through the tabs below.")
+
+        # ── File upload ───────────────────────────────────────────
+        st.markdown("**Upload Excel/CSV**")
+        uploaded = st.file_uploader(
+            "Drag and drop file here",
+            type=["csv", "xlsx", "xls", "xlsm"],
+            label_visibility="collapsed",
+            help=f"Limit {CONFIG.data.max_file_size_mb}MB per file · CSV, XLSX",
+        )
+
+        if uploaded is not None:
+            _handle_upload(uploaded)
+
+        st.markdown("---")
+        st.markdown("**Navigate to:**")
+
+        # Same pages as original + PPT Report (new)
+        pages = [
+            "🏠 Home & Data Cleaning",
+            "📈 Auto-Dashboard",
+            "🎨 Custom Analysis",
+            "🗣️ Chat with Data",
+            "📋 PPT Report",  # NEW feature
+        ]
+
+        has_data = st.session_state.load_result is not None
+
+        for p in pages:
+            disabled = (not has_data) and (p != "🏠 Home & Data Cleaning")
+            if st.button(
+                p, use_container_width=True, disabled=disabled, key=f"nav_{p}"
+            ):
+                st.session_state.current_page = p
+
+        # Quality badge
+        if st.session_state.profile:
+            qs = st.session_state.profile.quality_score
+            color = "green" if qs >= 75 else "orange" if qs >= 50 else "red"
+            st.markdown(f"\n**Data Quality:** :{color}[{qs}/100]")
+
+        st.markdown("---")
+        st.info("Built with Streamlit & Python")
+
+    return st.session_state.current_page
+
+
+def _handle_upload(uploaded) -> None:
+    """Load, validate, profile — only re-runs when file changes."""
+    from core.data_loader import LoadError, load_dataframe
+    from core.validator import profile_dataframe
+
+    # Only re-process if new file
+    current_name = (
+        st.session_state.load_result.file_name if st.session_state.load_result else None
+    )
+    if current_name == uploaded.name:
+        return
+
+    file_bytes = uploaded.read()
+    max_bytes = CONFIG.data.max_file_size_mb * 1024 * 1024
+    if len(file_bytes) > max_bytes:
+        st.error(
+            f"File too large ({len(file_bytes) / 1e6:.1f} MB). Limit: {CONFIG.data.max_file_size_mb} MB."
+        )
+        return
+
+    with st.spinner("Loading data..."):
+        try:
+            load_result = load_dataframe(file_bytes, uploaded.name)
+            profile = profile_dataframe(load_result.df)
+            st.session_state.load_result = load_result
+            st.session_state.profile = profile
+            st.session_state.clean_result = None
+            st.session_state.chat_history = []
+            # Also store in old-style session key for compatibility
+            st.session_state["df_cleaned"] = load_result.df
+        except LoadError as e:
+            st.error(f"Could not load file: {e}")
+        except Exception as e:
+            st.error(f"Unexpected error: {type(e).__name__}: {e}")
+
+
+# ── Page renderers ────────────────────────────────────────────────
+
+
+def _page_home():
+    from ui.pages.upload_page import render
+
+    render()
+
+
+def _page_dashboard():
+    from ui.pages.stats_page import render
+
+    render()
+
+
+def _page_custom():
+    from ui.pages.custom_analysis_page import render
+
+    render()
+
+
+def _page_chat():
+    from ui.pages.chat_page import render
+
+    render()
+
+
+def _page_report():
+    from ui.pages.report_page import render
+
+    render()
+
+
+def _inject_custom_css() -> None:
+    st.markdown(
+        """
+<style>
+    /* Google Fonts import */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Style sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #0F172A !important;
+        border-right: 1px solid rgba(13, 148, 136, 0.2);
+    }
+
+    /* Styled navigation buttons */
+    div[data-testid="stVerticalBlock"] button {
+        background-color: rgba(30, 41, 59, 0.5) !important;
+        color: #E2E8F0 !important;
+        border: 1px solid rgba(226, 232, 240, 0.1) !important;
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    div[data-testid="stVerticalBlock"] button:hover {
+        background-color: rgba(13, 148, 136, 0.15) !important;
+        border-color: #0D9488 !important;
+        color: #0D9488 !important;
+    }
+
+    /* Style metric cards */
+    div[data-testid="stMetric"] {
+        background: rgba(30, 41, 59, 0.4);
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(226, 232, 240, 0.08);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        border-color: rgba(13, 148, 136, 0.4);
+    }
+
+    /* Header fonts */
+    h1, h2, h3 {
+        font-weight: 600 !important;
+    }
+
+    /* Links and highlight styling */
+    a {
+        color: #0D9488 !important;
+    }
+
+    /* Success message custom styling */
+    div.stAlert {
+        border-radius: 10px !important;
+        border: 1px solid rgba(13, 148, 136, 0.2) !important;
+        background-color: rgba(13, 148, 136, 0.05) !important;
+    }
+</style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+
+def main() -> None:
+    _init_session_state()
+    _inject_custom_css()
+    page = _render_sidebar()
+
+    # No file uploaded yet
+    if st.session_state.load_result is None and page != "🏠 Home & Data Cleaning":
+        st.info("👈 Please upload a CSV or Excel file from the sidebar to begin.")
+        st.markdown("""
+### Welcome to Excel Auto-Analyst!
+This app helps you:
+1. **Clean Data** — remove duplicates, smart imputation (not just fill with 0)
+2. **Visualize** — instant dashboards with KPIs, distributions, correlations
+3. **Analyse** — custom charts with AI-powered insights
+4. **Chat** — ask questions in plain English, AI generates charts & answers
+5. **Report** — one-click executive PowerPoint report generation *(new!)*
+        """)
+        return
+
+    page_map = {
+        "🏠 Home & Data Cleaning": _page_home,
+        "📈 Auto-Dashboard": _page_dashboard,
+        "🎨 Custom Analysis": _page_custom,
+        "🗣️ Chat with Data": _page_chat,
+        "📋 PPT Report": _page_report,
+    }
+
+    renderer = page_map.get(page, _page_home)
     try:
-        if file.name.endswith('.csv'):
-            return pd.read_csv(file)
-        else:
-            return pd.read_excel(file)
+        renderer()
     except Exception as e:
-        st.error(f"Error loading file: {e}")
-        return None
-
-# 3. Main Application Logic
-if uploaded_file is not None:
-    # Load Data
-    df = load_data(uploaded_file)
-    
-    if df is not None:
-        # Detect Columns
-        num_cols = df.select_dtypes(include=['number']).columns.tolist()
-        cat_cols = df.select_dtypes(include=['object']).columns.tolist()
-
-        # --- PAGE 1: HOME & DATA CLEANING ---
-        if page == "🏠 Home & Data Cleaning":
-            st.title("🏠 Data Overview & Cleaning")
-            st.markdown("### 1. Raw Data Preview")
-            st.dataframe(df.head())
-
-            # Stats
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Total Rows", df.shape[0])
-            col2.metric("Total Columns", df.shape[1])
-            col3.metric("Missing Values", df.isnull().sum().sum())
-
-            st.markdown("---")
-            st.markdown("### 2. Auto-Cleaning Options")
-            
-            clean_mode = st.checkbox("✅ Enable Auto-Cleaning Mode")
-            
-            if clean_mode:
-                df_cleaned = df.copy()
-                # Remove duplicates
-                df_cleaned = df_cleaned.drop_duplicates()
-                # Fill missing numbers with 0 (safe default)
-                df_cleaned[num_cols] = df_cleaned[num_cols].fillna(0)
-                # Fill missing text with "Unknown"
-                df_cleaned[cat_cols] = df_cleaned[cat_cols].fillna("Unknown")
-                
-                st.success("Data Cleaned! Duplicates removed and missing values filled.")
-                st.dataframe(df_cleaned.head())
-                
-                # Download Button
-                csv = df_cleaned.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 Download Cleaned Data",
-                    data=csv,
-                    file_name="cleaned_data.csv",
-                    mime="text/csv",
-                )
-                
-                # Save cleaned data to session state so other pages can use it
-                st.session_state['df_cleaned'] = df_cleaned
-            else:
-                # If not cleaning, use original data
-                st.session_state['df_cleaned'] = df
-
-        # --- PAGE 2: AUTO-DASHBOARD ---
-        elif page == "📈 Auto-Dashboard":
-            st.title("📈 Instant Insights Dashboard")
-            
-            # Retrieve data from session state
-            if 'df_cleaned' in st.session_state:
-                df_active = st.session_state['df_cleaned']
-                
-                if len(num_cols) > 0:
-                    # KPI Cards
-                    st.subheader("Key Performance Indicators")
-                    # Pick the first numeric column as the "Primary Metric" (e.g., Sales)
-                    metric_col = st.selectbox("Select Key Metric for KPIs:", num_cols, index=0)
-                    
-                    total = df_active[metric_col].sum()
-                    avg = df_active[metric_col].mean()
-                    maxx = df_active[metric_col].max()
-                    
-                    kpi1, kpi2, kpi3 = st.columns(3)
-                    kpi1.metric("Total Sum", f"{total:,.2f}")
-                    kpi2.metric("Average", f"{avg:,.2f}")
-                    kpi3.metric("Max Value", f"{maxx:,.2f}")
-                    
-                    st.markdown("---")
-                    
-                    # Auto-Charts
-                    col_chart1, col_chart2 = st.columns(2)
-                    
-                    with col_chart1:
-                        st.subheader("Distribution")
-                        fig_hist = px.histogram(df_active, x=metric_col, title=f"Distribution of {metric_col}")
-                        st.plotly_chart(fig_hist, use_container_width=True)
-                        
-                    with col_chart2:
-                        if len(cat_cols) > 0:
-                            st.subheader("Categorical Split")
-                            cat_col = st.selectbox("Select Category:", cat_cols, key="dash_cat")
-                            df_grouped = df_active.groupby(cat_col)[metric_col].sum().reset_index()
-                            fig_pie = px.pie(df_grouped, names=cat_col, values=metric_col, title=f"{metric_col} by {cat_col}")
-                            st.plotly_chart(fig_pie, use_container_width=True)
-                        else:
-                            st.info("No text columns found for categorical analysis.")
-                else:
-                    st.warning("No numeric columns found to generate dashboards.")
-            else:
-                st.warning("Please go to the Home tab and check 'Enable Auto-Cleaning' first.")
-
-        # --- PAGE 3: CUSTOM ANALYSIS & AI ---
-        elif page == "🎨 Custom Analysis":
-            st.title("🎨 Custom Report Builder")
-            
-            if 'df_cleaned' in st.session_state:
-                df_active = st.session_state['df_cleaned']
-                
-                # Controls
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    x_axis = st.selectbox("X-Axis (Category/Time)", df_active.columns)
-                with col2:
-                    y_axis = st.selectbox("Y-Axis (Values)", num_cols)
-                with col3:
-                    chart_type = st.selectbox("Chart Type", ["Bar Chart", "Line Chart", "Scatter Plot"])
-                
-                # Generate Button
-                if st.button("Generate Analysis"):
-                    st.markdown("---")
-                    
-                    # Chart Logic
-                    if chart_type == "Bar Chart":
-                        df_grouped = df_active.groupby(x_axis)[y_axis].sum().reset_index()
-                        fig = px.bar(df_grouped, x=x_axis, y=y_axis, color=y_axis)
-                    elif chart_type == "Line Chart":
-                        df_sorted = df_active.sort_values(by=x_axis)
-                        fig = px.line(df_sorted, x=x_axis, y=y_axis)
-                    else:
-                        fig = px.scatter(df_active, x=x_axis, y=y_axis, color=x_axis)
-                    
-                    st.plotly_chart(fig, use_container_width=True)
-                    
-                    # AI Insights Logic
-                    st.subheader("🤖 AI Insights")
-                    
-                    # Calculate simple stats for narrative
-                    max_val = df_active[y_axis].max()
-                    min_val = df_active[y_axis].min()
-                    
-                    # Basic Trend Analysis
-                    try:
-                        start_val = df_active.sort_values(by=x_axis)[y_axis].iloc[0]
-                        end_val = df_active.sort_values(by=x_axis)[y_axis].iloc[-1]
-                        if end_val > start_val:
-                            trend = "increasing 📈"
-                        elif end_val < start_val:
-                            trend = "decreasing 📉"
-                        else:
-                            trend = "stable ➖"
-                    except:
-                        trend = "fluctuating"
-
-                    insight = f"""
-                    * **Observation:** The values for **{y_axis}** range from **{min_val:,.2f}** to **{max_val:,.2f}**.
-                    * **Trend:** Over the course of **{x_axis}**, the data appears to be **{trend}**.
-                    * **Peak:** The highest point helps identify the most performing category or time period.
-                    """
-                    st.info(insight)
-                    
-            else:
-                st.warning("Please go to the Home tab and check 'Enable Auto-Cleaning' first.")
-
-        # --- PAGE 4: CHAT WITH DATA (GEN-AI) ---
-        elif page == "🗣️ Chat with Data":
-            st.title("🗣️ Chat with your Data")
-            st.markdown("ask questions in plain English and let AI generate insights & charts.")
-
-            if 'df_cleaned' in st.session_state:
-                df_active = st.session_state['df_cleaned']
-
-                # API Key Handling
-                groq_key = None
-                
-                # 1. Try Secrets first
-                if "GROQ_API_KEY" in st.secrets:
-                    groq_key = st.secrets["GROQ_API_KEY"]
-
-                # 2. Key must be in secrets
-                if not groq_key:
-                    st.error("⚠️ GROQ_API_KEY not found in secrets. Please configure it in .streamlit/secrets.toml")
-                    st.stop()
-
-                if groq_key:
-                    # Initialize Groq Client
-                    try: 
-                        client = Groq(api_key=groq_key)
-                    except Exception as e:
-                        if "401" in str(e) or "invalid_api_key" in str(e):
-                             st.error("🚨 Error: Invalid API Key")
-                             st.info("The API key in `.streamlit/secrets.toml` is invalid.")
-                             st.markdown("**Fix:** Open `.streamlit/secrets.toml` and paste your actual Groq API key (starts with `gsk_`).")
-                             st.stop()
-                        else:
-                            st.error(f"Failed to initialize Groq client: {e}")
-                            st.stop()
-                    
-                    # Initialize Chat History
-                    if "messages" not in st.session_state:
-                        st.session_state.messages = []
-
-                    # Display History
-                    for message in st.session_state.messages:
-                        with st.chat_message(message["role"]):
-                            st.markdown(message["content"])
-
-                    # Chat Interface
-                    prompt = st.chat_input("Ask something (e.g., 'Plot top 5 sales by region')")
-                    
-                    if prompt:
-                        # 1. User Message
-                        st.session_state.messages.append({"role": "user", "content": prompt})
-                        with st.chat_message("user"):
-                            st.markdown(prompt)
-
-                        # 2. Assistant Logic
-                        with st.chat_message("assistant"):
-                            with st.spinner("🤖 Thinking & Coding..."):
-                                columns = list(df_active.columns)
-                                head_data = df_active.head(3).to_string()
-                                
-                                system_prompt = f"""
-                                You are a Python Data Analyst. Your goal is to answer questions about a pandas DataFrame 'df'.
-                                Columns: {columns}
-                                Sample: {head_data}
-                                
-                                RULES:
-                                1. You MUST use `print()` to output the answer. The user CANNOT see variables, only what you print.
-                                2. Output the result in SIMPLE, PLAIN ENGLISH. Avoid technical jargon.
-                                3. DO NOT print raw DataFrames, dictionaries, or lists.
-                                4. DO NOT print the Plotly figure object. Just create it as `fig`.
-                                5. Return ONLY valid Python code inside ```python``` block.
-                                """
-                                
-                                try:
-                                    response = client.chat.completions.create(
-                                        messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-                                        model="llama-3.3-70b-versatile",
-                                        temperature=0
-                                    )
-                                    
-                                    raw_content = response.choices[0].message.content
-                                    
-                                    # Extract Code
-                                    code = raw_content
-                                    if "```python" in raw_content:
-                                        code = raw_content.split("```python")[1].split("```")[0].strip()
-                                    elif "```" in raw_content:
-                                        code = raw_content.split("```")[1].split("```")[0].strip()
-                                    
-                                    # Execution & Capture
-                                    local_scope = {"df": df_active, "pd": pd, "px": px, "plt": plt}
-                                    output_buffer = StringIO()
-                                    
-                                    try:
-                                        with redirect_stdout(output_buffer):
-                                            exec(code, {}, local_scope)
-                                        
-                                        output_text = output_buffer.getvalue()
-                                        
-                                        # Filter out large JSON dumps (likely accidentally printed figures)
-                                        if output_text.strip().startswith("{") and len(output_text) > 100:
-                                            output_text = "*(Raw data output hidden)*"
-
-                                        # Display Output
-                                        if output_text:
-                                            st.markdown(output_text)
-                                            # Append text result to history
-                                            st.session_state.messages.append({"role": "assistant", "content": output_text})
-
-                                        if "fig" in local_scope:
-                                            st.plotly_chart(local_scope["fig"], use_container_width=True)
-                                            # Note: We can't easily persist plots in session_state messages list without serialization
-                                            st.session_state.messages.append({"role": "assistant", "content": "(Chart Generated)"})
-                                        
-                                        if not output_text and "fig" not in local_scope:
-                                            st.warning("The AI generated code but didn't output a text answer. Try asking it to 'print' the result.")
-
-                                        # Only show code in debug expander, NOT in main chat
-                                        with st.expander("Debug: View Generated Code"):
-                                            st.code(code, language='python')
-
-                                    except Exception as e:
-                                        st.error(f"Code Execution Error: {e}")
-                                        st.code(code, language='python') # Show code so user can debug
-                                
-                                except Exception as e:
-                                    st.error(f"Groq API Error: {e}")
+        _render_error(e)
 
 
-
-else:
-    # Landing Page when no file is uploaded
-    st.info("👈 Please upload a CSV or Excel file from the sidebar to begin.")
-    st.markdown("""
-    ### Welcome to Excel Auto-Analyst!
-    This app helps you:
-    1. **Clean Data** automatically (remove duplicates, fill missing values).
-    2. **Visualize** trends with instant dashboards.
-    3. **Analyze** custom relationships with AI-powered summaries.
-    """) 
+if __name__ == "__main__":
+    main()

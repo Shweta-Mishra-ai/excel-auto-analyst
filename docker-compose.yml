@@ -1,0 +1,51 @@
+version: "3.9"
+
+# ─── Local development stack ────────────────────────────────────────────────
+# Usage:
+#   docker compose up          → start all services
+#   docker compose up app      → start only the app
+#   docker compose --profile tools up → also start Adminer (DB UI)
+
+services:
+  # ── Main App ────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8501:8501"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - ENVIRONMENT=development
+    volumes:
+      # Mount code for hot-reload in dev (remove in production)
+      - .:/app:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Redis (Future: session state, caching) ─────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    profiles: ["full"]   # Only start with: docker compose --profile full up
+
+  # ── DB UI (dev convenience) ────────────────────────────────────
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    profiles: ["tools"]
+
+volumes:
+  redis_data:

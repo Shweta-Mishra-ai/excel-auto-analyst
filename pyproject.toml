@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "excel-auto-analyst"
+version = "2.0.0"
+description = "AI-powered data analytics platform"
+requires-python = ">=3.11"
+
+# ─── RUFF (linter + formatter) ──────────────────────────────────
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["."]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "S",   # bandit security checks
+    "C4",  # flake8-comprehensions
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "S101",  # assert statements (OK in tests)
+    "S603",  # subprocess (needed for sandbox)
+    "E501",  # line too long (ruff formatter handles this)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ─── PYTEST ─────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--tb=short",
+    "--strict-markers",
+    "-v",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m not slow')",
+    "integration: marks tests as integration tests",
+]
+
+# ─── COVERAGE ───────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    "*/migrations/*",
+    "app.py",
+    "ui/*",
+]
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true
+skip_covered = false
