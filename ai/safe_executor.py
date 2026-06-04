@@ -77,9 +77,18 @@ def _validate_ast(code: str) -> str | None:
     except SyntaxError as e:
         return f"Syntax error: {e}"
 
+    allowed_mods = set(CONFIG.ai.allowed_modules) | {"pandas", "plotly", "numpy"}
+
     for node in ast.walk(tree):
-        if isinstance(node, ast.Import | ast.ImportFrom):
-            return "Import statements are not permitted. All allowed libraries are pre-imported."
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                base_mod = alias.name.split('.')[0]
+                if base_mod not in allowed_mods:
+                    return f"Import of '{base_mod}' is not permitted. All allowed libraries are pre-imported."
+        elif isinstance(node, ast.ImportFrom):
+            base_mod = node.module.split('.')[0] if node.module else ""
+            if base_mod not in allowed_mods:
+                return f"Import from '{base_mod}' is not permitted. All allowed libraries are pre-imported."
 
         if isinstance(node, ast.Name) and node.id in _BLOCKED_NAMES:
             return f"Use of '{node.id}' is not permitted."
@@ -229,18 +238,7 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
-    # Strip all imports line-by-line so they don't trigger AST block
-    lines = cleaned.split("\n")
-    filtered_lines = []
-    for line in lines:
-        stripped = line.strip()
-        tokens = stripped.split()
-        if len(tokens) >= 2 and tokens[0] in ("import", "from"):
-            continue
-        filtered_lines.append(line)
-    cleaned = "\n".join(filtered_lines)
-
-    # AST validation
+    # AST validation (this also blocks forbidden imports)
     ast_error = _validate_ast(cleaned)
     if ast_error:
         return ExecResult(
@@ -250,6 +248,22 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
             error=f"Security check failed: {ast_error}",
             code_executed=cleaned,
         )
+
+    # Use AST to strip imports securely
+    class ImportStripper(ast.NodeTransformer):
+        def visit_Import(self, node):
+            return None
+        def visit_ImportFrom(self, node):
+            return None
+
+    try:
+        tree = ast.parse(cleaned)
+        tree = ImportStripper().visit(tree)
+        ast.fix_missing_locations(tree)
+        cleaned = ast.unparse(tree)
+    except Exception:
+        pass  # Fallback to the original cleaned if unparse fails for some reason
+
 
     scope = _build_safe_scope(df)
     buffer = StringIO()

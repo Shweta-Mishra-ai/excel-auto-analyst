@@ -43,9 +43,9 @@ class TestValidateAST:
     def test_dunder_attribute_blocked(self):
         assert _validate_ast("x = df.__class__.__bases__") is not None
 
-    def test_any_import_blocked(self):
-        """All imports blocked — modules are pre-injected."""
-        assert _validate_ast("import pandas as pd") is not None
+    def test_unallowed_import_blocked(self):
+        """Unallowed imports are blocked by AST validation."""
+        assert _validate_ast("import requests") is not None
 
     def test_syntax_error_caught(self):
         assert _validate_ast("def broken(:\n    pass") is not None

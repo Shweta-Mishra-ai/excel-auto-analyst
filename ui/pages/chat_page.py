@@ -128,9 +128,6 @@ def render() -> None:
                     st.error(f"LLM call failed: {type(e).__name__}: {e}")
                     return
 
-            # ── Safe execution of generated code ──────────────────
-            result = execute_safe(raw_response, df)
-
             assistant_msg: dict = {
                 "role": "assistant",
                 "content": raw_response,
@@ -138,6 +135,24 @@ def render() -> None:
                 "figure": None,
                 "error": None,
             }
+
+            # Check if it's purely conversational text (no code fences and not parseable as code)
+            import ast
+            is_conversational = False
+            if "```python" not in raw_response and "```" not in raw_response:
+                try:
+                    ast.parse(raw_response.strip())
+                except SyntaxError:
+                    is_conversational = True
+
+            if is_conversational:
+                st.write(raw_response)
+                assistant_msg["output"] = raw_response
+                st.session_state.chat_history.append(assistant_msg)
+                return
+
+            # ── Safe execution of generated code ──────────────────
+            result = execute_safe(raw_response, df)
 
             if result.success:
                 if result.output:
