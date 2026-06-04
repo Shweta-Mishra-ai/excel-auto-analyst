@@ -1,29 +1,9 @@
-# ─── Core Framework ─────────────────────────────────────────────
-streamlit>=1.37.0,<2.0.0
-
-# ─── Data Processing ─────────────────────────────────────────────
-pandas>=2.0.0,<3.1.0
-numpy>=1.26.0,<3.0.0
-openpyxl>=3.1.0,<4.0.0
-scipy>=1.11.0,<2.0.0
-
-# ─── Visualization ───────────────────────────────────────────────
-plotly>=5.15.0,<6.0.0
-matplotlib>=3.7.0,<4.0.0
-
-# ─── AI / LLM ────────────────────────────────────────────────────
-groq>=0.5.0,<1.0.0
-
-# ─── Safe Code Execution (Sandbox) ───────────────────────────────
-RestrictedPython>=7.0,<8.0
-
-# ─── Report Generation ───────────────────────────────────────────
-python-pptx>=0.6.21,<1.0.0
-fpdf2>=2.7.0,<3.0.0
-
-# ─── Validation & Config ─────────────────────────────────────────
-pydantic>=2.0.0,<3.0.0
-python-dotenv>=1.0.0,<2.0.0
-
-# ─── Dev / Testing (install with: pip install -r requirements-dev.txt) ──
-# See requirements-dev.txt
+streamlit>=1.37.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+plotly>=5.15.0
+matplotlib>=3.7.0
+groq>=0.5.0
+scipy>=1.11.0
+python-pptx>=0.6.21
+RestrictedPython>=7.0
