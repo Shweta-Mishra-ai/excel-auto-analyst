@@ -6,6 +6,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.37%2B-FF4B4B.svg)](https://streamlit.io)
 [![Sandboxed Sandbox](https://img.shields.io/badge/Sandbox-RestrictedPython-orange.svg)](https://pypi.org/project/RestrictedPython/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![GitHub stars](https://img.shields.io/github/stars/Shweta-Mishra-ai/excel-auto-analyst.svg?style=social)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst)
 
 ---
 
