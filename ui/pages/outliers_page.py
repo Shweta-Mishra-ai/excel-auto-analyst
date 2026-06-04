@@ -68,7 +68,7 @@ def render() -> None:
                     all_outliers[col] = detect_outliers_zscore(
                         df[col], threshold=z_thresh
                     )
-            except Exception:  # noqa: S110
+            except Exception:  # noqa: S110 # nosec B110
                 pass
 
     # ── Summary table ─────────────────────────────────────────────

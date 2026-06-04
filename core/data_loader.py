@@ -132,7 +132,7 @@ def _detect_duplicate_headers(content: bytes, fmt: FileFormat) -> list[str]:
                         seen.add(col)
                     return dupes
                 break
-            except Exception:  # noqa: S112
+            except Exception:  # noqa: S112 # nosec B112
                 continue
     elif fmt == FileFormat.EXCEL:
         try:
