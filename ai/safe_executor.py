@@ -170,7 +170,7 @@ def _exec_with_timeout(byte_code: object, scope: dict, timeout: int) -> None:
 
         def run() -> None:
             try:
-                exec(byte_code, scope)  # noqa: S102
+                exec(byte_code, scope)  # noqa: S102 # nosec B102
             except Exception as e:
                 result["error"] = e
 
@@ -190,7 +190,7 @@ def _exec_with_timeout(byte_code: object, scope: dict, timeout: int) -> None:
         old = signal.signal(signal.SIGALRM, _handler)
         signal.alarm(timeout)
         try:
-            exec(byte_code, scope)  # noqa: S102
+            exec(byte_code, scope)  # noqa: S102 # nosec B102
         finally:
             signal.alarm(0)
             signal.signal(signal.SIGALRM, old)
