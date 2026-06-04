@@ -59,6 +59,11 @@ class AIConfig:
                 "statistics",
                 "datetime",
                 "re",
+                "warnings",
+                "collections",
+                "itertools",
+                "json",
+                "time",
             }
         )
     )

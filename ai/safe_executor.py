@@ -94,10 +94,15 @@ def _validate_ast(code: str) -> str | None:
 
 
 def _build_safe_scope(df: pd.DataFrame) -> dict:
+    import collections
     import datetime
+    import itertools
+    import json
     import math
     import re
     import statistics
+    import time
+    import warnings
 
     import numpy as np
 
@@ -121,6 +126,11 @@ def _build_safe_scope(df: pd.DataFrame) -> dict:
         "datetime": datetime,
         "re": re,
         "scipy": scipy,
+        "warnings": warnings,
+        "collections": collections,
+        "itertools": itertools,
+        "json": json,
+        "time": time,
         "len": len,
         "range": range,
         "enumerate": enumerate,
