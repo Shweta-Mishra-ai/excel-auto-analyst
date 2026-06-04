@@ -1,0 +1,10 @@
+# Render Blueprint for Excel Auto-Analyst
+# Deploys automatically on Render's Free tier using the Docker environment
+services:
+  - type: web
+    name: excel-auto-analyst
+    runtime: docker
+    plan: free
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false # User configures this secret key in the Render dashboard

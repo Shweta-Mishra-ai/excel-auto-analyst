@@ -105,6 +105,18 @@ To allow users to run dynamic AI-generated queries on data without compromising 
 4.  Under Settings -> Secrets, add `GROQ_API_KEY = "your_key"`.
 5.  Click **Deploy**! Live in 2 minutes.
 
+### Option 3: Render (Free Web Service via Docker)
+1.  Sign in to [render.com](https://render.com) and click **New +** -> **Blueprint**.
+2.  Connect this GitHub repository. Render will automatically read the `render.yaml` file to configure the service.
+3.  Under the service's Environment settings, add `GROQ_API_KEY = "your_groq_api_key"`.
+4.  Render will build the `Dockerfile` and deploy the container. It's 100% free!
+
+### Option 4: Hugging Face Spaces (Free Streamlit SDK)
+1.  Create a new Space on [huggingface.co/spaces](https://huggingface.co/spaces).
+2.  Choose **Streamlit** as the SDK (or **Docker**).
+3.  Under Settings -> Repository secrets, add `GROQ_API_KEY = "your_groq_api_key"`.
+4.  Push your code directly to the Hugging Face Git remote to deploy.
+
 ---
 
 ## 🧪 Testing & Dev Workflow
