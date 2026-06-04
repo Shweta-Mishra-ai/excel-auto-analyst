@@ -67,16 +67,25 @@ class TestExecuteSafe:
         assert r.error is not None
 
     def test_allowed_imports_stripped(self, sample_df):
-        r = execute_safe("import pandas as pd\nimport plotly.express as px\nprint(df['sales'].mean())", sample_df)
+        r = execute_safe(
+            "import pandas as pd\nimport plotly.express as px\nprint(df['sales'].mean())",
+            sample_df,
+        )
         assert r.success is True
         assert "200" in r.output
 
         # Test tabs, multiple spaces, and from-imports
-        r2 = execute_safe("import   pandas   as   pd\nimport\tplotly.express\tas\tpx\nprint(df['sales'].mean())", sample_df)
+        r2 = execute_safe(
+            "import   pandas   as   pd\nimport\tplotly.express\tas\tpx\nprint(df['sales'].mean())",
+            sample_df,
+        )
         assert r2.success is True
         assert "200" in r2.output
 
-        r3 = execute_safe("from  plotly.express  import  scatter\nprint(df['sales'].mean())", sample_df)
+        r3 = execute_safe(
+            "from  plotly.express  import  scatter\nprint(df['sales'].mean())",
+            sample_df,
+        )
         assert r3.success is True
         assert "200" in r3.output
 
@@ -117,7 +126,10 @@ class TestExecuteSafe:
         from unittest.mock import patch
 
         if sys.platform != "win32":
-            with patch("signal.signal", side_effect=ValueError("signal only works in main thread")):
+            with patch(
+                "signal.signal",
+                side_effect=ValueError("signal only works in main thread"),
+            ):
                 r = execute_safe("print(df['sales'].mean())", sample_df)
                 assert r.success is True
                 assert "200" in r.output

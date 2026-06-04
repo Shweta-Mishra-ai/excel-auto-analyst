@@ -114,7 +114,9 @@ def render() -> None:
                 "IQR-based outlier detection per column",
             ),
             (
-                "✅" if (profile.has_numeric and len(profile.numeric_columns) >= 2) else "⏭️",
+                "✅"
+                if (profile.has_numeric and len(profile.numeric_columns) >= 2)
+                else "⏭️",
                 "Key Correlations",
                 "Pearson correlation coefficient (r) between numeric columns",
             ),

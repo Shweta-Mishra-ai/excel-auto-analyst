@@ -366,7 +366,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
             "Yes" if ds.is_normal else "No",
             out_str,
         ]
-        for val, xp, wd, hdr in zip(row_vals, x_positions, widths, headers, strict=False):
+        for val, xp, wd, hdr in zip(
+            row_vals, x_positions, widths, headers, strict=False
+        ):
             col_color = SLATE
             if val in ("Yes",):
                 col_color = GREEN

@@ -26,11 +26,20 @@ class TestPPTGenerator:
         ai_insights = {
             "headline": "Revenue is growing steadily across all key regions.",
             "insights": [
-                {"title": "Strong Sales Correlation", "detail": "Sales are strongly correlated with profits (r = 0.85)."},
-                {"title": "Low Outliers", "detail": "Less than 2% of transaction records are categorized as outliers."},
-                {"title": "Growth", "detail": "Units sold show a 5% month-over-month growth trend."}
+                {
+                    "title": "Strong Sales Correlation",
+                    "detail": "Sales are strongly correlated with profits (r = 0.85).",
+                },
+                {
+                    "title": "Low Outliers",
+                    "detail": "Less than 2% of transaction records are categorized as outliers.",
+                },
+                {
+                    "title": "Growth",
+                    "detail": "Units sold show a 5% month-over-month growth trend.",
+                },
             ],
-            "recommendation": "Expand operations in the North and West regions to capture peak demand."
+            "recommendation": "Expand operations in the North and West regions to capture peak demand.",
         }
 
         ri = ReportInput(
@@ -53,10 +62,12 @@ class TestPPTGenerator:
 
     def test_generate_report_no_numeric_columns(self):
         # Create a dataframe with only categorical columns
-        df = pd.DataFrame({
-            "region": ["North", "South", "East"],
-            "product": ["Widget", "Gadget", "Doohickey"]
-        })
+        df = pd.DataFrame(
+            {
+                "region": ["North", "South", "East"],
+                "product": ["Widget", "Gadget", "Doohickey"],
+            }
+        )
         profile = profile_dataframe(df)
 
         ri = ReportInput(
@@ -77,10 +88,9 @@ class TestPPTGenerator:
 
     def test_generate_report_no_correlations(self):
         # Only 1 numeric column, so correlation will be None
-        df = pd.DataFrame({
-            "sales": [10.0, 20.0, 30.0],
-            "product": ["Widget", "Gadget", "Doohickey"]
-        })
+        df = pd.DataFrame(
+            {"sales": [10.0, 20.0, 30.0], "product": ["Widget", "Gadget", "Doohickey"]}
+        )
         profile = profile_dataframe(df)
         kpi = compute_kpis(df, "sales")
         outliers = detect_all_outliers(df, profile)
