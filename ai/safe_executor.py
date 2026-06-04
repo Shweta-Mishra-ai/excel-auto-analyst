@@ -251,10 +251,10 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
 
     # Use AST to strip imports securely
     class ImportStripper(ast.NodeTransformer):
-        def visit_Import(self, node):  # noqa: N802
+        def visit_Import(self, node):  # noqa: N802, RUF100
             return None
 
-        def visit_ImportFrom(self, node):  # noqa: N802
+        def visit_ImportFrom(self, node):  # noqa: N802, RUF100
             return None
 
     try:
