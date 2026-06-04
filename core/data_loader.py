@@ -26,7 +26,7 @@ class LoadError(Exception):
     """Raised when a file cannot be loaded or fails validation."""
 
 
-class FileFormat(str, Enum):
+class FileFormat(str, Enum):  # noqa: UP042, RUF100
     CSV = "csv"
     EXCEL = "excel"
     UNKNOWN = "unknown"
@@ -44,7 +44,7 @@ class LoadResult:
 
     @property
     def shape_summary(self) -> str:
-        return f"{self.original_rows:,} rows × {self.original_columns} columns"
+        return f"{self.original_rows:,} rows × {self.original_columns} columns"  # noqa: RUF001
 
 
 def detect_format(file_name: str) -> FileFormat:
@@ -132,7 +132,7 @@ def _detect_duplicate_headers(content: bytes, fmt: FileFormat) -> list[str]:
                         seen.add(col)
                     return dupes
                 break
-            except Exception:
+            except Exception:  # noqa: S112
                 continue
     elif fmt == FileFormat.EXCEL:
         try:
@@ -203,7 +203,7 @@ def load_dataframe(file_bytes: bytes, file_name: str) -> LoadResult:
 
     _validate(df, file_name)
 
-    logger.info("Loaded %s: %d rows × %d columns", file_name, len(df), len(df.columns))
+    logger.info("Loaded %s: %d rows × %d columns", file_name, len(df), len(df.columns))  # noqa: RUF001
 
     return LoadResult(
         df=df,

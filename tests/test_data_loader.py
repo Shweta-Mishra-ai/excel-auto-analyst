@@ -67,7 +67,7 @@ class TestLoadDataframe:
     def test_shape_summary_format(self, csv_bytes):
         result = load_dataframe(csv_bytes, "data.csv")
         assert "rows" in result.shape_summary
-        assert "×" in result.shape_summary
+        assert "×" in result.shape_summary  # noqa: RUF001
 
     def test_unsupported_extension_raises(self):
         with pytest.raises(LoadError, match="Unsupported"):

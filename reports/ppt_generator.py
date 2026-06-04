@@ -66,13 +66,13 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     blank_layout = prs.slide_layouts[6]  # completely blank
 
     # ── Color palette ─────────────────────────────────────────────
-    NAVY = RGBColor(0x0F, 0x17, 0x2A)
-    TEAL = RGBColor(0x0D, 0x94, 0x88)
-    WHITE = RGBColor(0xFF, 0xFF, 0xFF)
-    SLATE = RGBColor(0x64, 0x74, 0x8B)
-    RED = RGBColor(0xDC, 0x26, 0x26)
-    AMBER = RGBColor(0xD9, 0x77, 0x06)
-    GREEN = RGBColor(0x16, 0xA3, 0x4A)
+    NAVY = RGBColor(0x0F, 0x17, 0x2A)  # noqa: N806
+    TEAL = RGBColor(0x0D, 0x94, 0x88)  # noqa: N806
+    WHITE = RGBColor(0xFF, 0xFF, 0xFF)  # noqa: N806
+    SLATE = RGBColor(0x64, 0x74, 0x8B)  # noqa: N806
+    RED = RGBColor(0xDC, 0x26, 0x26)  # noqa: N806
+    AMBER = RGBColor(0xD9, 0x77, 0x06)  # noqa: N806
+    GREEN = RGBColor(0x16, 0xA3, 0x4A)  # noqa: N806
 
     def add_text_box(
         slide,
@@ -88,10 +88,10 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     ):
         from pptx.enum.text import PP_ALIGN
 
-        txBox = slide.shapes.add_textbox(
+        tx_box = slide.shapes.add_textbox(
             Inches(left), Inches(top), Inches(width), Inches(height)
         )
-        tf = txBox.text_frame
+        tf = tx_box.text_frame
         tf.word_wrap = True
         p = tf.paragraphs[0]
         p.text = str(text)
@@ -101,10 +101,10 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
         run.font.bold = bold
         if color:
             run.font.color.rgb = color
-        return txBox
+        return tx_box
 
     def add_rect(slide, left, top, width, height, fill_color):
-        from pptx.util import Inches as I
+        from pptx.util import Inches as I  # noqa: N817
 
         shape = slide.shapes.add_shape(
             1,  # MSO_SHAPE_TYPE.RECTANGLE

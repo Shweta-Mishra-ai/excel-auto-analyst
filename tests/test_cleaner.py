@@ -72,7 +72,7 @@ class TestImputeCategorical:
 
     def test_unknown_strategy(self):
         s = pd.Series(["X", None, "Y"], name="cat")
-        result, label = _impute_categorical(s, "unknown")
+        result, _ = _impute_categorical(s, "unknown")
         assert result.iloc[1] == "Unknown"
 
     def test_no_nulls_returns_no_action(self):

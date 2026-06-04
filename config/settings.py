@@ -104,7 +104,7 @@ def get_groq_api_key() -> str | None:
         import streamlit as st
 
         return st.secrets.get("GROQ_API_KEY")
-    except Exception:
+    except Exception:  # noqa: S110
         pass
     # Fallback: environment variable (local dev with .env)
     return os.getenv("GROQ_API_KEY")

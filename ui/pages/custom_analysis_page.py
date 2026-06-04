@@ -19,7 +19,7 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
     mean_val = df[y_col].mean()
 
     # Safe trend: only sort if x is numeric or datetime
-    trend = "stable ➖"
+    trend = "stable ➖"  # noqa: RUF001
     try:
         df_sorted = df[[x_col, y_col]].dropna().sort_values(by=x_col)
         if len(df_sorted) >= 2:
@@ -29,7 +29,7 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
                 trend = "increasing 📈"
             elif end_val < start_val * 0.95:
                 trend = "decreasing 📉"
-    except Exception:
+    except Exception:  # noqa: S110
         pass
 
     # Try Groq for richer insight
@@ -52,7 +52,7 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
                 max_tokens=300,
             )
             return resp.choices[0].message.content
-        except Exception:
+        except Exception:  # noqa: S110
             pass  # fall through to rule-based
 
     # Rule-based fallback (always works, no API needed)

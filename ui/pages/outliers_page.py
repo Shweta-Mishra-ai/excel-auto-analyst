@@ -47,7 +47,7 @@ def render() -> None:
         ),
     )
 
-    col1, col2 = st.columns(2)
+    col1, _ = st.columns(2)
     if "IQR" in method:
         multiplier = col1.slider("IQR multiplier (k)", 1.0, 3.0, 1.5, 0.1)
     else:
@@ -68,7 +68,7 @@ def render() -> None:
                     all_outliers[col] = detect_outliers_zscore(
                         df[col], threshold=z_thresh
                     )
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
     # ── Summary table ─────────────────────────────────────────────

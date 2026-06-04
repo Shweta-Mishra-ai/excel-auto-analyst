@@ -23,7 +23,7 @@ from config.settings import CONFIG
 logger = logging.getLogger(__name__)
 
 try:
-    from RestrictedPython import compile_restricted, safe_globals
+    from RestrictedPython import compile_restricted
     from RestrictedPython.Guards import guarded_getattr, guarded_getiter, safe_builtins
 
     _HAS_RESTRICTED = True

@@ -18,7 +18,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class SemanticType(str, Enum):
+class SemanticType(str, Enum):  # noqa: UP042, RUF100
     NUMERIC_CONTINUOUS = "numeric_continuous"
     NUMERIC_DISCRETE = "numeric_discrete"
     CATEGORICAL = "categorical"
@@ -193,7 +193,7 @@ def _compute_quality_score(profile: DataProfile) -> float:
 
 def profile_dataframe(df: pd.DataFrame) -> DataProfile:
     """Full profile of a DataFrame. Called once on load, again after cleaning."""
-    logger.info("Profiling: %d rows × %d cols", len(df), len(df.columns))
+    logger.info("Profiling: %d rows × %d cols", len(df), len(df.columns))  # noqa: RUF001
 
     col_profiles: dict[str, ColumnProfile] = {}
     numeric_cols: list[str] = []
