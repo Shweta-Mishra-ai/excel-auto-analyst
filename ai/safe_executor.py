@@ -208,6 +208,25 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
+    # Strip allowed imports line-by-line so LLM imports don't trigger AST block
+    lines = cleaned.split("\n")
+    filtered_lines = []
+    for line in lines:
+        stripped = line.strip()
+        tokens = stripped.split()
+        if len(tokens) >= 2 and tokens[0] in ("import", "from"):
+            # Check if the base module name (e.g. 'plotly' from 'plotly.express') is in allowed list
+            base_mod = tokens[1].split(".")[0].rstrip(",")
+            is_allowed = False
+            for mod in [*list(CONFIG.ai.allowed_modules), "plotly"]:
+                if base_mod == mod:
+                    is_allowed = True
+                    break
+            if is_allowed:
+                continue
+        filtered_lines.append(line)
+    cleaned = "\n".join(filtered_lines)
+
     # AST validation
     ast_error = _validate_ast(cleaned)
     if ast_error:

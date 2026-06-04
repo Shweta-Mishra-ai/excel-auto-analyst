@@ -66,10 +66,11 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     blank_layout = prs.slide_layouts[6]  # completely blank
 
     # ── Color palette ─────────────────────────────────────────────
-    NAVY = RGBColor(0x0F, 0x17, 0x2A)  # noqa: N806
+    BG_DARK = RGBColor(0x0B, 0x0F, 0x19)  # noqa: N806
+    CARD_BG = RGBColor(0x1E, 0x29, 0x3B)  # noqa: N806
     TEAL = RGBColor(0x0D, 0x94, 0x88)  # noqa: N806
-    WHITE = RGBColor(0xFF, 0xFF, 0xFF)  # noqa: N806
-    SLATE = RGBColor(0x64, 0x74, 0x8B)  # noqa: N806
+    WHITE = RGBColor(0xF8, 0xFA, 0xFC)  # noqa: N806
+    SLATE = RGBColor(0x94, 0xA3, 0xB8)  # noqa: N806
     RED = RGBColor(0xDC, 0x26, 0x26)  # noqa: N806
     AMBER = RGBColor(0xD9, 0x77, 0x06)  # noqa: N806
     GREEN = RGBColor(0x16, 0xA3, 0x4A)  # noqa: N806
@@ -120,7 +121,7 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
 
     # ─── Slide 1: Title ──────────────────────────────────────────
     slide = prs.slides.add_slide(blank_layout)
-    add_rect(slide, 0, 0, 13.33, 7.5, NAVY)
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
     add_rect(slide, 0, 0, 0.15, 7.5, TEAL)
 
     add_text_box(
@@ -170,7 +171,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
 
     # ─── Slide 2: Data Overview ───────────────────────────────────
     slide = prs.slides.add_slide(blank_layout)
-    add_rect(slide, 0, 0, 13.33, 1.0, NAVY)
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
+    add_rect(slide, 0, 0, 13.33, 1.0, CARD_BG)
+    add_rect(slide, 0, 0.95, 13.33, 0.05, TEAL)
     add_text_box(
         slide, "DATA OVERVIEW", 0.3, 0.15, 12, 0.7, font_size=22, bold=True, color=WHITE
     )
@@ -197,8 +200,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     ]
     for i, (label, val, col) in enumerate(metrics):
         bx = 0.3 + (i % 3) * 4.3
-        by = 1.2 + (i // 3) * 1.8
-        add_rect(slide, bx, by, 3.8, 1.5, NAVY)
+        by = 1.4 + (i // 3) * 1.8
+        add_rect(slide, bx, by, 3.8, 1.5, CARD_BG)
+        add_rect(slide, bx, by, 3.8, 0.06, TEAL)
         add_text_box(
             slide,
             val,
@@ -219,7 +223,7 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
             3.8,
             0.45,
             font_size=12,
-            color=WHITE,
+            color=SLATE,
             align="center",
         )
 
@@ -231,7 +235,7 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
         f"Datetime: {len(ri.profile.datetime_columns)}  ·  "
         f"ID-like: {len(ri.profile.id_columns)}",
         0.3,
-        5.0,
+        5.8,
         12,
         0.5,
         font_size=13,
@@ -240,7 +244,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
 
     # ─── Slide 3: KPI Summary ─────────────────────────────────────
     slide = prs.slides.add_slide(blank_layout)
-    add_rect(slide, 0, 0, 13.33, 1.0, RGBColor(0x06, 0x4E, 0x3B))
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
+    add_rect(slide, 0, 0, 13.33, 1.0, CARD_BG)
+    add_rect(slide, 0, 0.95, 13.33, 0.05, TEAL)
     add_text_box(
         slide,
         f"KPI SUMMARY — {ri.metric_col.upper()}",
@@ -266,8 +272,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
         ]
         for i, (label, val) in enumerate(kpi_items):
             bx = 0.3 + (i % 4) * 3.2
-            by = 1.2 + (i // 4) * 1.8
-            add_rect(slide, bx, by, 2.9, 1.5, NAVY)
+            by = 1.4 + (i // 4) * 1.8
+            add_rect(slide, bx, by, 2.9, 1.5, CARD_BG)
+            add_rect(slide, bx, by, 2.9, 0.06, TEAL)
             add_text_box(
                 slide,
                 val,
@@ -288,30 +295,33 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
                 2.9,
                 0.45,
                 font_size=12,
-                color=WHITE,
+                color=SLATE,
                 align="center",
             )
 
         if ri.kpi.mom_change_pct is not None:
             mom_col = GREEN if ri.kpi.mom_change_pct >= 0 else RED
             sign = "+" if ri.kpi.mom_change_pct >= 0 else ""
-            add_rect(slide, 0.3, 5.2, 4.0, 0.7, mom_col)
+            add_rect(slide, 0.3, 5.2, 4.0, 0.7, CARD_BG)
+            add_rect(slide, 0.3, 5.2, 0.08, 0.7, mom_col)
             add_text_box(
                 slide,
                 f"Month-over-Month: {sign}{ri.kpi.mom_change_pct:.1f}%",
-                0.3,
+                0.5,
                 5.2,
-                4.0,
+                3.8,
                 0.7,
                 font_size=14,
                 bold=True,
-                color=WHITE,
+                color=mom_col,
                 align="center",
             )
 
     # ─── Slide 4: Statistical Summary ─────────────────────────────
     slide = prs.slides.add_slide(blank_layout)
-    add_rect(slide, 0, 0, 13.33, 1.0, RGBColor(0x1E, 0x1B, 0x4B))
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
+    add_rect(slide, 0, 0, 13.33, 1.0, CARD_BG)
+    add_rect(slide, 0, 0.95, 13.33, 0.05, TEAL)
     add_text_box(
         slide,
         "STATISTICAL SUMMARY",
@@ -325,7 +335,7 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     )
 
     desc_stats = compute_all_descriptive_stats(ri.df, ri.profile)
-    y_pos = 1.15
+    y_pos = 1.35
     headers = ["Column", "Mean", "Median", "Std Dev", "Skewness", "Normal?", "Outliers"]
     widths = [3.2, 1.7, 1.7, 1.7, 1.6, 1.3, 1.5]
     x_positions = [0.2]
@@ -333,7 +343,8 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
         x_positions.append(x_positions[-1] + w)
 
     # Header row
-    add_rect(slide, 0.2, y_pos, 12.9, 0.45, NAVY)
+    add_rect(slide, 0.2, y_pos, 12.9, 0.45, CARD_BG)
+    add_rect(slide, 0.2, y_pos + 0.43, 12.9, 0.02, TEAL)
     for hdr, xp, wd in zip(headers, x_positions, widths, strict=False):
         add_text_box(
             slide, hdr, xp, y_pos, wd, 0.45, font_size=10, bold=True, color=WHITE
@@ -343,8 +354,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     for col_name, ds in list(desc_stats.items())[:8]:
         outlier_count = ri.outliers.get(col_name)
         out_str = str(outlier_count.outlier_count) if outlier_count else "—"
-        bg = RGBColor(0xF8, 0xFA, 0xFC)
+        bg = CARD_BG
         add_rect(slide, 0.2, y_pos, 12.9, 0.48, bg)
+        add_rect(slide, 0.2, y_pos + 0.46, 12.9, 0.02, BG_DARK)
         row_vals = [
             col_name,
             f"{ds.mean:.2f}",
@@ -354,18 +366,22 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
             "Yes" if ds.is_normal else "No",
             out_str,
         ]
-        for val, xp, wd in zip(row_vals, x_positions, widths, strict=False):
+        for val, xp, wd, hdr in zip(row_vals, x_positions, widths, headers, strict=False):
             col_color = SLATE
             if val in ("Yes",):
                 col_color = GREEN
-            elif val in ("No",) and headers[row_vals.index(val)] == "Normal?":
+            elif val in ("No",) and hdr == "Normal?":
                 col_color = AMBER
+            elif hdr == "Column":
+                col_color = WHITE
             add_text_box(slide, val, xp, y_pos, wd, 0.45, font_size=10, color=col_color)
         y_pos += 0.5
 
     # ─── Slide 5: Outlier Analysis ────────────────────────────────
     slide = prs.slides.add_slide(blank_layout)
-    add_rect(slide, 0, 0, 13.33, 1.0, RGBColor(0x45, 0x0A, 0x0A))
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
+    add_rect(slide, 0, 0, 13.33, 1.0, CARD_BG)
+    add_rect(slide, 0, 0.95, 13.33, 0.05, TEAL)
     add_text_box(
         slide,
         "OUTLIER ANALYSIS",
@@ -379,14 +395,13 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     )
 
     if ri.outliers:
-        y_pos = 1.15
         for i, (col, out) in enumerate(list(ri.outliers.items())[:9]):
             bx = 0.3 + (i % 3) * 4.35
-            by = 1.15 + (i // 3) * 1.85
+            by = 1.4 + (i // 3) * 1.85
             sev_color = (
                 RED if out.outlier_pct > 5 else AMBER if out.outlier_pct > 1 else GREEN
             )
-            add_rect(slide, bx, by, 4.0, 1.65, NAVY)
+            add_rect(slide, bx, by, 4.0, 1.65, CARD_BG)
             add_rect(slide, bx, by, 4.0, 0.08, sev_color)
             add_text_box(
                 slide,
@@ -422,9 +437,83 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
             color=SLATE,
         )
 
-    # ─── Slide 6: AI Insights ─────────────────────────────────────
+    # ─── Slide 6: Key Data Correlations ───────────────────────────
     slide = prs.slides.add_slide(blank_layout)
-    add_rect(slide, 0, 0, 13.33, 1.0, RGBColor(0x4A, 0x19, 0x42))
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
+    add_rect(slide, 0, 0, 13.33, 1.0, CARD_BG)
+    add_rect(slide, 0, 0.95, 13.33, 0.05, TEAL)
+    add_text_box(
+        slide,
+        "KEY DATA CORRELATIONS",
+        0.3,
+        0.15,
+        12,
+        0.7,
+        font_size=22,
+        bold=True,
+        color=WHITE,
+    )
+
+    if ri.correlation and ri.correlation.strong_pairs:
+        for i, (col_a, col_b, val) in enumerate(ri.correlation.strong_pairs[:6]):
+            bx = 0.3 + (i % 3) * 4.35
+            by = 1.4 + (i // 3) * 1.85
+            corr_color = TEAL if val >= 0 else AMBER
+            strength_desc = "Strong" if abs(val) >= 0.7 else "Moderate"
+            dir_desc = "Positive" if val >= 0 else "Negative"
+
+            add_rect(slide, bx, by, 4.0, 1.65, CARD_BG)
+            add_rect(slide, bx, by, 4.0, 0.08, corr_color)
+
+            add_text_box(
+                slide,
+                f"{col_a}\nvs\n{col_b}",
+                bx + 0.1,
+                by + 0.12,
+                3.8,
+                0.75,
+                font_size=11,
+                bold=True,
+                color=WHITE,
+            )
+            add_text_box(
+                slide,
+                f"r = {val:+.2f}",
+                bx + 0.1,
+                by + 0.92,
+                3.8,
+                0.35,
+                font_size=16,
+                bold=True,
+                color=corr_color,
+            )
+            add_text_box(
+                slide,
+                f"{strength_desc} {dir_desc} Correlation",
+                bx + 0.1,
+                by + 1.25,
+                3.8,
+                0.3,
+                font_size=9,
+                color=SLATE,
+            )
+    else:
+        add_text_box(
+            slide,
+            "No strong linear relationships (r >= 0.5) detected between numeric columns.",
+            0.3,
+            2.0,
+            12,
+            0.5,
+            font_size=14,
+            color=SLATE,
+        )
+
+    # ─── Slide 7: AI Insights ─────────────────────────────────────
+    slide = prs.slides.add_slide(blank_layout)
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
+    add_rect(slide, 0, 0, 13.33, 1.0, CARD_BG)
+    add_rect(slide, 0, 0.95, 13.33, 0.05, TEAL)
     add_text_box(
         slide,
         "AI-GENERATED INSIGHTS",
@@ -439,15 +528,16 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
 
     if ri.ai_insights:
         headline = ri.ai_insights.get("headline", "")
-        add_rect(slide, 0.3, 1.1, 12.7, 0.7, TEAL)
+        add_rect(slide, 0.3, 1.2, 12.7, 0.7, CARD_BG)
+        add_rect(slide, 0.3, 1.2, 0.08, 0.7, TEAL)
         add_text_box(
-            slide, headline, 0.4, 1.15, 12.5, 0.6, font_size=14, bold=True, color=WHITE
+            slide, headline, 0.5, 1.25, 12.5, 0.6, font_size=14, bold=True, color=WHITE
         )
 
         for i, insight in enumerate(ri.ai_insights.get("insights", [])[:3]):
             bx = 0.3 + i * 4.35
-            by = 2.0
-            add_rect(slide, bx, by, 4.0, 2.8, NAVY)
+            by = 2.1
+            add_rect(slide, bx, by, 4.0, 2.8, CARD_BG)
             add_rect(slide, bx, by, 4.0, 0.08, TEAL)
             add_text_box(
                 slide,
@@ -473,12 +563,13 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
 
         rec = ri.ai_insights.get("recommendation", "")
         if rec:
-            add_rect(slide, 0.3, 5.0, 12.7, 0.7, RGBColor(0x16, 0xA3, 0x4A))
+            add_rect(slide, 0.3, 5.1, 12.7, 0.7, CARD_BG)
+            add_rect(slide, 0.3, 5.1, 0.08, 0.7, GREEN)
             add_text_box(
                 slide,
                 f"Recommendation: {rec}",
-                0.4,
-                5.05,
+                0.5,
+                5.15,
                 12.5,
                 0.6,
                 font_size=12,
@@ -497,9 +588,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
             color=SLATE,
         )
 
-    # ─── Slide 7: Closing ─────────────────────────────────────────
+    # ─── Slide 8: Closing ─────────────────────────────────────────
     slide = prs.slides.add_slide(blank_layout)
-    add_rect(slide, 0, 0, 13.33, 7.5, NAVY)
+    add_rect(slide, 0, 0, 13.33, 7.5, BG_DARK)
     add_rect(slide, 0, 0, 0.15, 7.5, TEAL)
     add_text_box(
         slide,

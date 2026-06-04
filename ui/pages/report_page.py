@@ -114,6 +114,11 @@ def render() -> None:
                 "IQR-based outlier detection per column",
             ),
             (
+                "✅" if (profile.has_numeric and len(profile.numeric_columns) >= 2) else "⏭️",
+                "Key Correlations",
+                "Pearson correlation coefficient (r) between numeric columns",
+            ),
+            (
                 "✅" if include_ai else "⏭️",
                 "AI Insights",
                 "Narrative + 3 key findings + recommendation",
@@ -205,6 +210,6 @@ def render() -> None:
         # ── Summary of what's in the report ───────────────────────
         st.subheader("Report Contents Summary")
         c1, c2, c3 = st.columns(3)
-        c1.metric("Slides Generated", "7")
+        c1.metric("Slides Generated", "8")
         c2.metric("Columns Analysed", len(profile.numeric_columns))
         c3.metric("AI Insights", "Included" if ai_insights else "Skipped (no API key)")
