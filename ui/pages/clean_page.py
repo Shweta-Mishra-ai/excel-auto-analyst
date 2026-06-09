@@ -90,14 +90,14 @@ def render() -> None:
             for col in df.columns
             if profile.columns[col].null_count > 0
         ]
-        st.dataframe(missing_data, use_container_width=True)
+        st.dataframe(missing_data, width='stretch')
     else:
         st.success("✅ No missing values found in this dataset.")
 
     st.divider()
 
     # ── Run cleaning ──────────────────────────────────────────────
-    if st.button("🧹 Clean Data", type="primary", use_container_width=True):
+    if st.button("🧹 Clean Data", type="primary", width='stretch'):
         with st.spinner("Cleaning data..."):
             try:
                 clean_result = clean_dataframe(
@@ -140,7 +140,7 @@ def render() -> None:
                     }
                     for step in clean_result.audit_trail
                 ]
-                st.dataframe(audit_data, use_container_width=True)
+                st.dataframe(audit_data, width='stretch')
 
         # ── Download cleaned data ─────────────────────────────────
         st.subheader("Download Cleaned Data")
