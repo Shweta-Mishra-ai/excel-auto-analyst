@@ -1,10 +1,10 @@
 """
 core/validator.py
-Analyses a DataFrame schema, infers semantic types, produces DataProfile.
 Fixes:
-  - infer_datetime_format removed (pandas 2.0+)
-  - match/case replaced with if/elif (Python 3.9 compat)
-  - _looks_like_datetime returns plain Python bool always
+- Pandas 3.x: numeric columns stored as 'str' dtype with mixed values
+- Auto-convert string columns that contain numbers
+- infer_datetime_format removed (pandas 2.0+)
+- match/case replaced with if/elif (Python 3.9 compat)
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class SemanticType(str, Enum):  # noqa: UP042, RUF100
+class SemanticType(str, Enum):
     NUMERIC_CONTINUOUS = "numeric_continuous"
     NUMERIC_DISCRETE = "numeric_discrete"
     CATEGORICAL = "categorical"
@@ -80,25 +80,35 @@ class DataProfile:
         return len(self.datetime_columns) > 0
 
 
-# ── Helpers ──────────────────────────────────────────────────────
-
-
 def _looks_like_datetime(sample: pd.Series) -> bool:
-    """Return plain Python bool — never numpy bool."""
+    """Return plain Python bool."""
     if len(sample) == 0:
         return False
     try:
-        # infer_datetime_format removed in pandas 2.0 — use format='mixed'
         parsed = pd.to_datetime(sample.head(10), format="mixed", errors="coerce")
-        result = parsed.notna().mean() > 0.7
-        return bool(result)  # force Python bool, not numpy bool
+        return bool(parsed.notna().mean() > 0.7)
     except Exception:
         try:
             parsed = pd.to_datetime(sample.head(10), errors="coerce")
-            result = parsed.notna().mean() > 0.7
-            return bool(result)
+            return bool(parsed.notna().mean() > 0.7)
         except Exception:
             return False
+
+
+def _is_numeric_string_col(series: pd.Series) -> bool:
+    """
+    Check if a string/object column actually contains numbers.
+    Pandas 3.x sometimes reads numeric CSVs as 'str' dtype.
+    """
+    try:
+        sample = series.dropna().head(50)
+        if len(sample) == 0:
+            return False
+        converted = pd.to_numeric(sample, errors="coerce")
+        # If > 80% of values convert to numbers, treat as numeric
+        return bool(converted.notna().mean() > 0.8)
+    except Exception:
+        return False
 
 
 def _infer_semantic_type(series: pd.Series, dtype: str) -> SemanticType:
@@ -109,16 +119,35 @@ def _infer_semantic_type(series: pd.Series, dtype: str) -> SemanticType:
     # Boolean
     if dtype == "bool":
         return SemanticType.BOOLEAN
-    if set(series.dropna().unique()).issubset({0, 1}):
-        return SemanticType.BOOLEAN
+    non_null = series.dropna().unique()
+    if len(non_null) <= 2 and set(non_null).issubset(  # noqa: SIM102
+        {0, 1, True, False, "0", "1", "true", "false", "True", "False"}
+    ):
+        if len(non_null) <= 2:
+            return SemanticType.BOOLEAN
 
     # Datetime dtype
     if "datetime" in dtype:
         return SemanticType.DATE_TIME
 
-    # Object / str (pandas 3.x uses "str" dtype)
+    # Numeric dtypes
+    if "int" in dtype or "float" in dtype:
+        if pct_unique > 0.95 and n_unique > 100:
+            return SemanticType.ID_COLUMN
+        if "int" in dtype and n_unique <= 20:
+            return SemanticType.NUMERIC_DISCRETE
+        return SemanticType.NUMERIC_CONTINUOUS
+
+    # Object / str dtype (pandas 3.x uses "str" for string columns)
     if dtype in ("object", "str") or "string" in dtype:
         sample = series.dropna().head(50)
+
+        # KEY FIX: check if string col contains numbers
+        if _is_numeric_string_col(series):
+            if n_unique <= 20:
+                return SemanticType.NUMERIC_DISCRETE
+            return SemanticType.NUMERIC_CONTINUOUS
+
         if _looks_like_datetime(sample):
             return SemanticType.DATE_TIME
         if pct_unique > 0.95 and n_unique > 100:
@@ -127,14 +156,6 @@ def _infer_semantic_type(series: pd.Series, dtype: str) -> SemanticType:
         if avg_len > 80:
             return SemanticType.TEXT_FREE
         return SemanticType.CATEGORICAL
-
-    # Numeric
-    if "int" in dtype or "float" in dtype:
-        if pct_unique > 0.95 and n_unique > 100:
-            return SemanticType.ID_COLUMN
-        if "int" in dtype and n_unique <= 20:
-            return SemanticType.NUMERIC_DISCRETE
-        return SemanticType.NUMERIC_CONTINUOUS
 
     return SemanticType.UNKNOWN
 
@@ -188,12 +209,17 @@ def _compute_quality_score(profile: DataProfile) -> float:
     return round(min(100, completeness + uniqueness + consistency + structure), 1)
 
 
-# ── Public API ───────────────────────────────────────────────────
-
-
 def profile_dataframe(df: pd.DataFrame) -> DataProfile:
-    """Full profile of a DataFrame. Called once on load, again after cleaning."""
-    logger.info("Profiling: %d rows × %d cols", len(df), len(df.columns))  # noqa: RUF001
+    """Full profile. Auto-converts numeric string columns."""
+    logger.info("Profiling: %d rows x %d cols", len(df), len(df.columns))
+
+    # Auto-convert string columns that contain numbers
+    df = df.copy()
+    for col in df.columns:
+        if str(df[col].dtype) in ("object", "str") or "string" in str(df[col].dtype):
+            if _is_numeric_string_col(df[col]):
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+                logger.info("Auto-converted '%s' to numeric", col)
 
     col_profiles: dict[str, ColumnProfile] = {}
     numeric_cols: list[str] = []
@@ -207,7 +233,6 @@ def profile_dataframe(df: pd.DataFrame) -> DataProfile:
         cp = _profile_column(df[col_name])
         col_profiles[col_name] = cp
 
-        # if/elif instead of match (Python 3.9 compatible)
         if cp.semantic_type in (
             SemanticType.NUMERIC_CONTINUOUS,
             SemanticType.NUMERIC_DISCRETE,
@@ -227,9 +252,7 @@ def profile_dataframe(df: pd.DataFrame) -> DataProfile:
 
     total_cells = len(df) * len(df.columns)
     total_missing = int(df.isna().sum().sum())
-    missing_pct = (
-        round(total_missing / total_cells * 100, 2) if total_cells > 0 else 0.0
-    )
+    missing_pct = round(total_missing / total_cells * 100, 2) if total_cells > 0 else 0.0
     dup_count = int(df.duplicated().sum())
 
     partial = DataProfile(
@@ -249,4 +272,10 @@ def profile_dataframe(df: pd.DataFrame) -> DataProfile:
         quality_score=0.0,
     )
     partial.quality_score = _compute_quality_score(partial)
+    logger.info(
+        "Profile done: %d numeric, %d categorical, quality=%.1f",
+        len(numeric_cols),
+        len(cat_cols),
+        partial.quality_score,
+    )
     return partial
