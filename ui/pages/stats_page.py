@@ -85,7 +85,7 @@ def render() -> None:
             color_discrete_sequence=["#0D9488"],
             nbins=40,
         )
-        st.plotly_chart(fig_hist, use_container_width=True)
+        st.plotly_chart(fig_hist, width='stretch')
 
     with col_chart2:
         if cat_cols:
@@ -98,7 +98,7 @@ def render() -> None:
                 values=metric_col,
                 title=f"{metric_col} by {cat_col}",
             )
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie, width='stretch')
         else:
             st.info("No categorical columns found for categorical analysis.")
 
@@ -123,7 +123,7 @@ def render() -> None:
                         "Normal?": "✅" if ds.is_normal else "❌",
                     }
                 )
-            st.dataframe(table, use_container_width=True)
+            st.dataframe(table, width='stretch')
 
     # ── Correlation Heatmap (new) ────────────────────────────────
     if len(num_cols) >= 2:
@@ -145,7 +145,7 @@ def render() -> None:
                     )
                 )
                 fig_hm.update_layout(title="Pearson Correlation Heatmap")
-                st.plotly_chart(fig_hm, use_container_width=True)
+                st.plotly_chart(fig_hm, width='stretch')
                 if corr_result.strong_pairs:
                     st.markdown("**Strong correlations (|r| ≥ 0.5):**")
                     for col_a, col_b, val in corr_result.strong_pairs[:5]:
@@ -169,4 +169,4 @@ def render() -> None:
                 }
                 for col, r in outliers.items()
             ]
-            st.dataframe(summary, use_container_width=True)
+            st.dataframe(summary, width='stretch')
