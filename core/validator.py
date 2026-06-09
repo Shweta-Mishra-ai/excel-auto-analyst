@@ -11,14 +11,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 
-class SemanticType(str, Enum):
+class SemanticType(StrEnum):
     NUMERIC_CONTINUOUS = "numeric_continuous"
     NUMERIC_DISCRETE = "numeric_discrete"
     CATEGORICAL = "categorical"
@@ -120,11 +120,9 @@ def _infer_semantic_type(series: pd.Series, dtype: str) -> SemanticType:
     if dtype == "bool":
         return SemanticType.BOOLEAN
     non_null = series.dropna().unique()
-    if len(non_null) <= 2 and set(non_null).issubset(  # noqa: SIM102
-        {0, 1, True, False, "0", "1", "true", "false", "True", "False"}
-    ):
-        if len(non_null) <= 2:
-            return SemanticType.BOOLEAN
+    bool_vals = {0, 1, "0", "1", "true", "false", "True", "False"}
+    if len(non_null) <= 2 and all(str(v) in {str(b) for b in bool_vals} for v in non_null):
+        return SemanticType.BOOLEAN
 
     # Datetime dtype
     if "datetime" in dtype:
