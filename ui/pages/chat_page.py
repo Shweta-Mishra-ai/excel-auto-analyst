@@ -100,7 +100,7 @@ def render() -> None:
         cols = st.columns(2)
         for i, suggestion in enumerate(suggestions):
             if cols[i % 2].button(suggestion, key=f"sugg_{i}",
-                                   use_container_width=True):
+                                   width='stretch'):
                 st.session_state.chat_history.append(
                     {"role": "user", "content": suggestion}
                 )
@@ -114,7 +114,7 @@ def render() -> None:
                     st.markdown(msg["output"])
                 if msg.get("figure"):
                     try:
-                        st.plotly_chart(msg["figure"], use_container_width=True)
+                        st.plotly_chart(msg["figure"], width='stretch')
                     except Exception:
                         st.info("Chart cannot be re-rendered — ask again.")
                 if msg.get("error"):
@@ -134,7 +134,7 @@ def render() -> None:
     if not user_input:
         if st.session_state.chat_history:
             st.divider()
-            if st.button("Clear conversation", use_container_width=True):
+            if st.button("Clear conversation", width='stretch'):
                 st.session_state.chat_history = []
                 st.rerun()
         return
@@ -189,7 +189,7 @@ def render() -> None:
                 st.markdown(result.output)
                 assistant_msg["output"] = result.output
             if result.figure:
-                st.plotly_chart(result.figure, use_container_width=True)
+                st.plotly_chart(result.figure, width='stretch')
                 assistant_msg["figure"] = result.figure
             if not result.output and not result.figure:
                 fallback = (
