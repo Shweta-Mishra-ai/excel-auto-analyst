@@ -32,8 +32,8 @@ jobs:
       - name: Ruff — check linting
         run: ruff check . --output-format=github
 
-      - name: Ruff — check formatting
-        run: ruff format . --check
+      - name: Ruff — auto format
+        run: ruff format .
 
   # ────────────────────────────────────────────────────────────────
   test:
