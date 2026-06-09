@@ -16,8 +16,6 @@
 
 ---
 
-*Built with ❤️ by **[Shweta Mishra](https://github.com/Shweta-Mishra-ai)***
-
 </div>
 
 ---
