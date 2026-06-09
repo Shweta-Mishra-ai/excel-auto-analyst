@@ -349,7 +349,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
             by = 1.65 + i * 0.6
             txt(s, label, 0.5,  by, 1.4, 0.5, size=10, color=slate)
             txt(s, val,   1.9,  by, 1.6, 0.5, size=10, bold=True, color=white)
-    dist_png = _make_dist_chart(ri.df, ri.metric_col) if ri.profile.has_numeric else None
+    dist_png = (
+        _make_dist_chart(ri.df, ri.metric_col) if ri.profile.has_numeric else None
+    )
     if dist_png:
         add_img(s, dist_png, 3.8, 1.1, 9.1, 5.0)
     else:
@@ -407,10 +409,18 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
             by     = 1.6 + i * 0.58
             row_bg = dark if i % 2 == 0 else RGBColor(0x16, 0x20, 0x30)
             rect(s, 0.4, by, 12.5, 0.52, row_bg)
-            sev_col = red if out.outlier_pct > 5 else amber if out.outlier_pct > 1 else green
+            sev_col = (
+                red if out.outlier_pct > 5 else amber if out.outlier_pct > 1 else green
+            )
             lb  = f"{out.lower_bound:.2f}" if out.lower_bound is not None else "-"
             ub  = f"{out.upper_bound:.2f}" if out.upper_bound is not None else "-"
-            sev = "High" if out.outlier_pct > 5 else "Medium" if out.outlier_pct > 1 else "Low"
+            sev = (
+                "High"
+                if out.outlier_pct > 5
+                else "Medium"
+                if out.outlier_pct > 1
+                else "Low"
+            )
             vals = [col[:18], str(out.outlier_count),
                     f"{out.outlier_pct:.1f}%", lb, ub, sev]
             for j, (val, xp) in enumerate(zip(vals, x_pos, strict=False)):
@@ -456,7 +466,9 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     rect(s, 0, 0, 13.33, 7.5, navy)
     rect(s, 0, 0, 13.33, 1.0, RGBColor(0x4A, 0x19, 0x42))
     rect(s, 0, 0, 0.18, 7.5, RGBColor(0xA8, 0x55, 0xF7))
-    txt(s, "AI-GENERATED INSIGHTS", 0.4, 0.18, 12, 0.65, size=22, bold=True, color=white)
+    txt(
+        s, "AI-GENERATED INSIGHTS", 0.4, 0.18, 12, 0.65, size=22, bold=True, color=white
+    )
     txt(s, "Powered by Groq LLaMA-3.3", 0.4, 0.65, 12, 0.35, size=11, color=slate)
     if ri.ai_insights:
         headline = ri.ai_insights.get("headline", "")
