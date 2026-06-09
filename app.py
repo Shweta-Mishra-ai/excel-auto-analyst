@@ -141,7 +141,7 @@ def _render_sidebar() -> tuple[str, object]:
             disabled = (not has_data) and (p != "🏠 Home & Data Cleaning")
             if st.button(
                 p,
-                use_container_width=True,
+                width='stretch',
                 disabled=disabled,
                 key=f"nav_{p}",
             ):
