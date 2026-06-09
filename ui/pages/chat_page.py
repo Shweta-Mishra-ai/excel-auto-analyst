@@ -192,7 +192,9 @@ def render() -> None:
                 st.plotly_chart(result.figure, use_container_width=True)
                 assistant_msg["figure"] = result.figure
             if not result.output and not result.figure:
-                fallback = "Analysis done. Try asking me to print the result or show a chart."
+                fallback = (
+                    "Analysis done. Try asking me to print the result or show a chart."
+                )
                 st.info(fallback)
                 assistant_msg["output"] = fallback
             with st.expander("View generated code"):
