@@ -103,7 +103,7 @@ def render() -> None:
             key="ca_chart",
         )
 
-    if st.button("🔍 Generate Analysis", type="primary", use_container_width=True):
+    if st.button("🔍 Generate Analysis", type="primary", width='stretch'):
         st.markdown("---")
 
         # ── Chart ─────────────────────────────────────────────────
@@ -153,7 +153,7 @@ def render() -> None:
                     color_discrete_sequence=["#0D9488"],
                 )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         except Exception as e:
             st.error(f"Chart generation failed: {e}")
