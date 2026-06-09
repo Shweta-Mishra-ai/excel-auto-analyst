@@ -26,7 +26,7 @@ def render() -> None:
 
     # ── 1. Raw Data Preview (same as original) ────────────────────
     st.markdown("### 1. Raw Data Preview")
-    st.dataframe(df.head(), use_container_width=True)
+    st.dataframe(df.head(), width='stretch')
 
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Rows", f"{df.shape[0]:,}")
@@ -87,7 +87,7 @@ def render() -> None:
                 f"Data Cleaned! {clean_result.duplicates_removed} duplicates removed "
                 f"and missing values filled ({num_strategy} strategy)."
             )
-            st.dataframe(clean_result.df.head(), use_container_width=True)
+            st.dataframe(clean_result.df.head(), width='stretch')
 
             # Audit trail (new)
             if clean_result.audit_trail:
@@ -102,7 +102,7 @@ def render() -> None:
                         }
                         for s in clean_result.audit_trail
                     ]
-                    st.dataframe(audit_data, use_container_width=True)
+                    st.dataframe(audit_data, width='stretch')
 
             # Warnings
             for w in clean_result.warnings:
