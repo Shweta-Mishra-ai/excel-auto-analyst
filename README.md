@@ -24,20 +24,7 @@
 
 ## 🎬 Demo
 
-<div align="center">
-
-<!-- 
-  TO EMBED VIDEO:
-  1. Go to Releases → Create new release → attach Excel.demo.mp4
-  2. After publish, copy the video URL (github.com/user-attachments/assets/...)
-  3. Paste it below as a plain URL — GitHub auto-embeds it as a player
--->
-
-[![▶ Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo%20Video-0d6efd?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/blob/main/assets/Excel.demo.mp4)
-
-*Upload → Clean → Analyse → Chat → Export PPT — all in one flow*
-
-</div>
+https://github.com/Shweta-Mishra-ai/excel-auto-analyst/releases/download/v2.0.0/Excel.demo.mp4
 
 ---
 
