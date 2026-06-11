@@ -16,7 +16,7 @@
 </div>
 
 <div align="center">
-  <video src="https://github.com/Shweta-Mishra-ai/excel-auto-analyst/raw/main/assets/Excel.demo.mp4" controls="controls" muted="muted" width="100%"></video>
+  <video src="assets/Excel.demo.mp4" width="100%" controls autoplay loop muted></video>
 </div>
 
 > **Excel Auto-Analyst** bridges the gap between raw data and executive presentations. It is a no-code, secure, and fully automated platform that turns messy Excel spreadsheets into interactive dashboards and professional PowerPoint decks in seconds.
