@@ -15,7 +15,7 @@
 
 <br/>
 
-<video src="https://github.com/Shweta-Mishra-ai/excel-auto-analyst/raw/main/assets/Excel.demo.mp4" width="100%" controls autoplay loop muted></video>
+https://github.com/Shweta-Mishra-ai/excel-auto-analyst/raw/main/assets/Excel.demo.mp4
 
 </div>
 
