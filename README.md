@@ -12,7 +12,7 @@
 
 **Upload any CSV or Excel file → Clean → Analyse → Chat with AI → Export PPT Report**
 
-[🚀 Live Demo]https://excel-auto-analyst-ne9ocshgvqtvqtitbapbjs.streamlit.app/ · [⭐ Star this repo](https://github.com/Shweta-Mishra-ai/excel-auto-analyst) · [🐛 Report Bug](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/issues)
+[🚀 Live Demo](https://excel-auto-analyst-ne9ocshgvqtvqtitbapbjs.streamlit.app/) · [⭐ Star this repo](https://github.com/Shweta-Mishra-ai/excel-auto-analyst) · [🐛 Report Bug](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/issues)
 
 ---
 
