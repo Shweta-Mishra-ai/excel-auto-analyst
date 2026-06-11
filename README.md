@@ -14,6 +14,9 @@
 [**🚀 Live Demo**](https://excel-auto-analyst-ne9ocshgvqtvqtitbapbjs.streamlit.app/) &nbsp;&nbsp;|&nbsp;&nbsp; [**⭐ Star Repo**](https://github.com/Shweta-Mishra-ai/excel-auto-analyst) &nbsp;&nbsp;|&nbsp;&nbsp; [**🐛 Report Bug**](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/issues)
 
 <br/>
+
+<video src="https://github.com/Shweta-Mishra-ai/excel-auto-analyst/raw/main/assets/Excel.demo.mp4" width="100%" controls autoplay loop muted></video>
+
 </div>
 
 > **Excel Auto-Analyst** bridges the gap between raw data and executive presentations. It is a no-code, secure, and fully automated platform that turns messy Excel spreadsheets into interactive dashboards and professional PowerPoint decks in seconds.
