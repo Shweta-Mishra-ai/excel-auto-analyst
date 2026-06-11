@@ -8,7 +8,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.37%2B-ff4b4b?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
 [![Groq · LLaMA 3.3](https://img.shields.io/badge/Groq-LLaMA%203.3-f97316?style=flat-square)](https://groq.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/Shweta-Mishra-ai/excel-auto-analyst?style=flat-square&color=facc15)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/stargazers)
+[![Stars](https://img.shields.io/github/stars/Shweta-Mishra-ai/excel-auto-analyst?style=flat-square&color=facc15&cacheSeconds=3600)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/stargazers)
 
 <br/>
 
@@ -26,9 +26,16 @@
 
 <div align="center">
 
-[![Watch Demo](https://img.shields.io/badge/▶%20Watch%20Full%20Demo-black?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/blob/main/assets/Excel.demo.mp4)
+<!-- 
+  TO EMBED VIDEO:
+  1. Go to Releases → Create new release → attach Excel.demo.mp4
+  2. After publish, copy the video URL (github.com/user-attachments/assets/...)
+  3. Paste it below as a plain URL — GitHub auto-embeds it as a player
+-->
 
-> Click the button above to watch the demo video directly on GitHub.
+[![▶ Watch Demo](https://img.shields.io/badge/▶%20Watch%20Demo%20Video-0d6efd?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/blob/main/assets/Excel.demo.mp4)
+
+*Upload → Clean → Analyse → Chat → Export PPT — all in one flow*
 
 </div>
 
