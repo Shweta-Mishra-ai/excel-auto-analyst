@@ -1,147 +1,327 @@
-# 📊 Excel Auto-Analyst v2.0
+<div align="center">
 
-> An enterprise-grade, AI-powered data analytics and automated reporting platform. Clean, profile, analyze, and generate professional PowerPoint reports with one click.
+<img src="https://raw.githubusercontent.com/Shweta-Mishra-ai/excel-auto-analyst/main/assets/logo.png" alt="Excel Auto-Analyst" width="120" onerror="this.style.display='none'"/>
 
-[![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.37%2B-FF4B4B.svg)](https://streamlit.io)
-[![Sandboxed Sandbox](https://img.shields.io/badge/Sandbox-RestrictedPython-orange.svg)](https://pypi.org/project/RestrictedPython/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/Shweta-Mishra-ai/excel-auto-analyst.svg?style=social)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst)
+# 📊 Excel Auto-Analyst
+
+### AI-Powered Data Analytics — From Raw Data to Insights in Seconds
+
+<p>
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" alt="Streamlit"/>
+  <img src="https://img.shields.io/badge/Groq-LLaMA_3.3-F55036?style=for-the-badge" alt="Groq"/>
+  <img src="https://img.shields.io/badge/License-MIT-00C853?style=for-the-badge" alt="License"/>
+</p>
+
+<p>
+  <img src="https://img.shields.io/github/stars/Shweta-Mishra-ai/excel-auto-analyst?style=for-the-badge&color=FFD700&label=Stars" alt="Stars"/>
+  <img src="https://img.shields.io/github/forks/Shweta-Mishra-ai/excel-auto-analyst?style=for-the-badge&color=00BFFF&label=Forks" alt="Forks"/>
+  <img src="https://img.shields.io/github/last-commit/Shweta-Mishra-ai/excel-auto-analyst?style=for-the-badge&color=8A2BE2" alt="Last Commit"/>
+</p>
+
+<br/>
+
+**Upload any CSV/Excel → AI cleans it → Instant dashboards → Chat in plain English → Export PPT report**
+
+<br/>
+
+<a href="https://excel-auto-analyst-ne9ocshgvqtvqlitbapbjs.streamlit.app">
+  <img src="https://img.shields.io/badge/🚀_LIVE_DEMO-Click_Here-0D9488?style=for-the-badge&labelColor=0F172A" alt="Live Demo"/>
+</a>
+&nbsp;
+<a href="https://github.com/Shweta-Mishra-ai/excel-auto-analyst/stargazers">
+  <img src="https://img.shields.io/badge/⭐_STAR_THIS_REPO-Support_the_Project-FFD700?style=for-the-badge&labelColor=0F172A" alt="Star"/>
+</a>
+
+</div>
+
+<br/>
 
 ---
 
-## 🌟 Key Features
+## ✨ Why Excel Auto-Analyst?
 
-*   **Smart Cleaning & Imputation**: Handles missing numerical values via robust statistics (mean, median, forward fill) rather than silently corrupting data with zeros. Categorical mode imputation and duplicate row pruning.
-*   **Instant Automated Dashboards**: Interactive KPIs, histograms, and categorical distribution breakdowns using dynamic Plotly charts.
-*   **Correlation & Outliers**: Built-in Pearson/Spearman correlation heatmaps and automated outlier detection (using Z-Score or IQR methods).
-*   **Secured AI Chat**: Ask plain-English questions of your datasets. The integrated LLM translates questions to python commands executed inside a secure, sandboxed environment.
-*   **One-Click PPT Reports**: Instantly generates complete PowerPoint presentations containing your data overview, KPI metrics, statistical tables, outlier reports, and AI insights.
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🔴 The Problem
+- Hours wasted cleaning messy spreadsheets
+- Manual chart-making for every report
+- No technical skills → no insights
+- Reports take days, not seconds
+- "Fill missing values with 0" corrupts your data
+
+</td>
+<td width="50%" valign="top">
+
+### ✅ The Solution
+- **Smart cleaning** — median imputation, audit trail
+- **Instant dashboards** — KPIs, trends, correlations
+- **AI chat** — ask questions in plain English
+- **One-click PPT** — 9-slide executive report
+- **Zero setup** — works in your browser
+
+</td>
+</tr>
+</table>
 
 ---
 
-## 🏗️ Architecture & Directory Flow
+## 🎬 See It In Action
 
-The codebase is built on strict modularity, maintaining separation of concerns between data loaders, stats calculations, LLM orchestrations, and page rendering layers:
+<div align="center">
 
-```mermaid
-graph TD
-    A[app.py Routing] --> B[ui/pages Pages]
-    B --> C[core Loader, Cleaner, Profile]
-    B --> D[analytics Stats, Outliers, KPIs]
-    B --> E[ai Safe Sandbox, LLM Prompts]
-    B --> F[reports PPTX Auto-Generation]
+| Upload & Clean | Instant Dashboard | Chat with AI | PPT Report |
+|:---:|:---:|:---:|:---:|
+| Drag & drop your file | KPIs auto-generated | Ask anything | 9-slide export |
+
+</div>
+
+---
+
+## 🚀 Core Features
+
+<table>
+<tr>
+<td valign="top" width="33%">
+
+### 🏠 Smart Cleaning
+- Median/Mean/Mode imputation
+- **Never** fills with 0 (data integrity!)
+- Duplicate detection & removal
+- Full audit trail of every change
+- Data Quality Score (0-100)
+
+</td>
+<td valign="top" width="33%">
+
+### 📈 Auto Dashboard
+- KPI cards (Sum, Avg, Max, Min, MoM)
+- Distribution histograms
+- Correlation heatmaps
+- Outlier detection (IQR + Z-Score)
+- Categorical breakdowns
+
+</td>
+<td valign="top" width="33%">
+
+### 🎨 Custom Analysis
+- Bar, Line, Scatter, Box, Area charts
+- **Sort** ascending/descending
+- **Top N** filtering
+- Aggregation (Sum/Avg/Count/Median)
+- Multi-category filters
+- Export chart data as CSV
+
+</td>
+</tr>
+<tr>
+<td valign="top" width="33%">
+
+### 🗣️ Chat with Data
+- Plain English Q&A
+- AI-generated charts on demand
+- Powered by Groq LLaMA 3.3-70B
+- Sandboxed code execution (secure)
+- Conversation history
+
+</td>
+<td valign="top" width="33%">
+
+### 📋 PPT Report
+- 9 professional slides
+- Real embedded charts (matplotlib)
+- KPI summary + AI insights
+- Outlier & correlation analysis
+- One-click download
+
+</td>
+<td valign="top" width="33%">
+
+### 🔐 Security First
+- AST-sandboxed AI execution
+- No raw `exec()` vulnerability
+- 39+ unit tests passing
+- Ruff lint-clean codebase
+- CI/CD with GitHub Actions
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🏗️ Architecture
+
+```
+excel-auto-analyst/
+├── app.py                       # Thin router — zero business logic
+├── config/
+│   └── settings.py              # Centralized configuration
+├── core/
+│   ├── data_loader.py           # CSV/Excel ingestion + validation
+│   ├── validator.py             # Schema detection, data profiling
+│   └── cleaner.py               # Smart imputation + audit trail
+├── analytics/
+│   └── stats_engine.py          # KPIs, correlation, outliers, stats
+├── ai/
+│   ├── safe_executor.py         # AST-sandboxed code execution
+│   └── prompt_builder.py        # Structured LLM prompts
+├── reports/
+│   └── ppt_generator.py         # 9-slide PPT with real charts
+├── ui/pages/
+│   ├── upload_page.py           # Home & Data Cleaning
+│   ├── stats_page.py            # Auto Dashboard
+│   ├── custom_analysis_page.py  # Custom Report Builder
+│   ├── chat_page.py             # Chat with Data
+│   └── report_page.py           # PPT Report Generator
+└── tests/                        # 39+ unit tests
 ```
 
-### Directory Structure
-
-```
-├── app.py                  # Thin router and page selector (zero business logic)
-├── config/                 # Central configuration and environment settings
-│   └── settings.py         # Data limits, allowed modules, thresholds, model configuration
-├── core/                   # Raw data manipulation & profiling
-│   ├── data_loader.py      # Streamloaders and preemptive duplicate headers block
-│   ├── validator.py        # Semantic typing inference and data health scoring
-│   └── cleaner.py          # Duplication removal, imputation, and edit auditing
-├── analytics/              # Deep statistical engines
-│   └── stats_engine.py     # Descriptive stats, correlation matrices, IQR/Z-score outliers
-├── ai/                     # Safe LLM execution sandbox
-│   ├── prompt_builder.py   # Schema-rich prompts injection
-│   └── safe_executor.py    # RestrictedPython/AST-only code execution sandbox
-├── reports/                # PowerPoint automation
-│   └── ppt_generator.py    # Auto-generation using python-pptx templates
-├── ui/pages/               # UI components per page
-└── tests/                  # Robust test coverage (descriptive stats, data load, AST safety)
-```
-
 ---
 
-## 🔒 Enterprise Sandbox Security (AST + RestrictedPython)
+## ⚡ Quick Start
 
-To allow users to run dynamic AI-generated queries on data without compromising server security, Excel Auto-Analyst implements a dual-layer secure runtime environment:
+### Option 1 — Try it Live (No Setup)
 
-1.  **AST Validation**: Rejects all `import` and `from ... import ...` statements in code blocks. Code is scanned for dunder attributes (`__class__`, `__globals__`, etc.) or blocked functions (`exec`, `eval`, `open`, `input`, `os`, `sys`).
-2.  **Globals Isolation**: The code is executed in an isolated dictionary scope. Safe libraries (`pandas`, `numpy`, `scipy`, `plotly.express`, `math`, `statistics`, `datetime`, `re`) are pre-injected into the scope so that they can be used directly without needing imports.
-3.  **Timeout Protection**: Code executions are limited to a custom timeout limit (e.g. 10s) using platform-safe execution threads (SIGALRM on Unix / daemon threads on Windows).
+<div align="center">
 
----
+**[👉 Open Live App](https://excel-auto-analyst-ne9ocshgvqtvqlitbapbjs.streamlit.app)**
 
-## 🚀 Quick Start & Installation
+</div>
 
-### Option 1: Local Development
-
-1.  **Clone the Repository**:
-    ```bash
-    git clone <your-repo-url>
-    cd excel_analyst_fixed
-    ```
-
-2.  **Set Up Virtual Environment & Dependencies**:
-    ```bash
-    python -m venv venv
-    venv\Scripts\activate      # Windows
-    source venv/bin/activate   # macOS/Linux
-    
-    pip install -r requirements.txt
-    pip install -r requirements-dev.txt
-    ```
-
-3.  **Configure API Secrets**:
-    Create `.streamlit/secrets.toml` and add your Groq API Key:
-    ```toml
-    GROQ_API_KEY = "gsk_your_groq_api_key_goes_here"
-    ```
-
-4.  **Run Streamlit Platform**:
-    ```bash
-    streamlit run app.py
-    ```
-    Visit http://localhost:8501 in your browser.
-
-### Option 2: Streamlit Community Cloud (Recommended & Free)
-1.  Push the repository to GitHub.
-2.  Visit [share.streamlit.io](https://share.streamlit.io).
-3.  Connect your GitHub repository and set `Main file path` to `app.py`.
-4.  Under Settings -> Secrets, add `GROQ_API_KEY = "your_key"`.
-5.  Click **Deploy**! Live in 2 minutes.
-
-### Option 3: Render (Free Web Service via Docker)
-1.  Sign in to [render.com](https://render.com) and click **New +** -> **Blueprint**.
-2.  Connect this GitHub repository. Render will automatically read the `render.yaml` file to configure the service.
-3.  Under the service's Environment settings, add `GROQ_API_KEY = "your_groq_api_key"`.
-4.  Render will build the `Dockerfile` and deploy the container. It's 100% free!
-
-### Option 4: Hugging Face Spaces (Free Streamlit SDK)
-1.  Create a new Space on [huggingface.co/spaces](https://huggingface.co/spaces).
-2.  Choose **Streamlit** as the SDK (or **Docker**).
-3.  Under Settings -> Repository secrets, add `GROQ_API_KEY = "your_groq_api_key"`.
-4.  Push your code directly to the Hugging Face Git remote to deploy.
-
----
-
-## 🧪 Testing & Dev Workflow
-
-The platform maintains high-quality standards via rigorous automated test coverage.
-
-### Run Tests locally
+### Option 2 — Run Locally
 
 ```bash
-# Run the test suite with coverage reporting
+# Clone the repo
+git clone https://github.com/Shweta-Mishra-ai/excel-auto-analyst.git
+cd excel-auto-analyst
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Add your free Groq API key
+echo 'GROQ_API_KEY = "gsk_your_key_here"' > .streamlit/secrets.toml
+
+# Run
+streamlit run app.py
+```
+
+Open **http://localhost:8501** 🎉
+
+> 🔑 Get a **free** Groq API key at [console.groq.com](https://console.groq.com)
+
+### Option 3 — Docker
+
+```bash
+docker compose up
+```
+
+---
+
+## 🧪 Testing & Quality
+
+```bash
+pip install -r requirements-dev.txt
 pytest tests/ -v --cov=. --cov-report=term-missing
+ruff check .
+ruff format .
 ```
 
-### Dev Workflow Script
+<div align="center">
 
-For streamlined integrations, use the automated quality verification script:
+| Metric | Status |
+|--------|--------|
+| Unit Tests | ✅ 39 passing |
+| Lint | ✅ Ruff clean |
+| Security | ✅ AST sandbox |
+| CI/CD | ✅ GitHub Actions |
 
-```bash
-chmod +x scripts/dev_workflow.sh
-./scripts/dev_workflow.sh feature/your-feature-name
-```
-This script formats the code via `ruff format`, runs linting via `ruff lint`, verifies tests via `pytest`, and helps merge cleanly.
+</div>
 
 ---
 
-## 📄 License
+## 🔄 Contributing — Branch Workflow
 
-Distributed under the MIT License. See `LICENSE` for details.
+```bash
+# 1. Create feature branch
+git checkout -b feature/your-feature
+
+# 2. Make changes, then verify
+ruff format .
+ruff check . --fix
+pytest tests/ -v
+
+# 3. Commit & push
+git add .
+git commit -m "feat: description of your feature"
+git push origin feature/your-feature
+
+# 4. Open a Pull Request → CI runs automatically
+```
+
+---
+
+## 📊 PPT Report — What's Inside
+
+<div align="center">
+
+| # | Slide | Content |
+|---|-------|---------|
+| 1 | 🎯 Cover | Dataset name + quality score |
+| 2 | 📋 Data Overview | Rows, columns, missing %, memory |
+| 3 | 📈 KPI Summary | Total, mean, median, MoM change |
+| 4 | 📊 Distribution | Histogram + mean/median lines |
+| 5 | 🏆 Category Breakdown | Top categories bar chart |
+| 6 | 🔍 Outlier Analysis | IQR detection per column |
+| 7 | 🔗 Correlation | Heatmap + strong pairs |
+| 8 | 🤖 AI Insights | Narrative + recommendations |
+| 9 | 🎬 Closing | Branding & summary |
+
+</div>
+
+---
+
+## 🛣️ Roadmap
+
+- [x] Smart data cleaning with audit trail
+- [x] AI-powered chat with sandboxed execution
+- [x] 9-slide PPT auto-generation
+- [x] Sort, filter & aggregation in Custom Analysis
+- [ ] Multi-file upload & join
+- [ ] Time-series forecasting (Prophet/ARIMA)
+- [ ] PDF export
+- [ ] User authentication & saved dashboards
+- [ ] Compare-two-periods analysis
+
+---
+
+## 🤝 Feedback & Contributions
+
+Found a bug? Have a feature idea? 
+
+- 🐛 [Open an Issue](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/issues)
+- 💡 [Start a Discussion](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/discussions)
+- ⭐ **Star this repo** if it helped you!
+
+---
+
+<div align="center">
+
+### Built with 💙 by [Shweta Mishra](https://github.com/Shweta-Mishra-ai)
+
+*Shweta*
+
+<p>
+  <a href="https://github.com/Shweta-Mishra-ai">
+    <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"/>
+  </a>
+  <a href="https://www.linkedin.com/">
+    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/>
+  </a>
+</p>
+
+<sub>If this project saved you time, consider giving it a ⭐ — it helps a lot!</sub>
+
+</div>
