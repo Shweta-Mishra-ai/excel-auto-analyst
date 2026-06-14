@@ -1,5 +1,5 @@
 """
-app.py — Excel Auto-Analyst v2.0
+app.py - Excel Auto-Analyst v2.0
 Thin router only. Zero business logic here.
 """
 
@@ -15,6 +15,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
+logger = logging.getLogger(__name__)
 
 st.set_page_config(
     page_title=CONFIG.title,
@@ -31,6 +32,8 @@ def _init_session_state() -> None:
         "clean_result": None,
         "chat_history": [],
         "current_page": "🏠 Home & Data Cleaning",
+        "last_upload_error": None,
+        "last_upload_name": None,
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -50,14 +53,14 @@ def _render_error(error: Exception) -> None:
 
 def _process_upload(uploaded) -> None:
     """
-    Process uploaded file — called from main body, not sidebar.
-    This fixes the Streamlit Cloud bug where file bytes are lost
-    after rerun when read inside the sidebar.
+    Process uploaded file - called from main body, not sidebar.
+    Every failure path sets st.session_state.last_upload_error so the
+    main body can show a visible, persistent error/warning to the user.
     """
     from core.data_loader import LoadError, load_dataframe
     from core.validator import profile_dataframe
 
-    # Skip if same file already loaded
+    # Skip if this exact file was already successfully loaded
     current_name = (
         st.session_state.load_result.file_name
         if st.session_state.load_result
@@ -66,39 +69,80 @@ def _process_upload(uploaded) -> None:
     if current_name == uploaded.name:
         return
 
-    # Read bytes immediately — before any rerun can clear them
+    st.session_state.last_upload_name = uploaded.name
+    st.session_state.last_upload_error = None
+
+    # Read bytes immediately - before any rerun can clear them
     try:
         file_bytes = uploaded.read()
-    except Exception:
-        st.sidebar.error("Could not read file. Please try again.")
+    except Exception as e:
+        msg = f"Could not read '{uploaded.name}': {type(e).__name__}: {e}"
+        logger.exception(msg)
+        st.session_state.last_upload_error = msg
         return
 
     if len(file_bytes) == 0:
-        st.sidebar.error("File is empty. Please upload a valid CSV or Excel file.")
+        msg = f"'{uploaded.name}' is empty (0 bytes). Please choose a valid file."
+        st.session_state.last_upload_error = msg
         return
 
     max_bytes = CONFIG.data.max_file_size_mb * 1024 * 1024
     if len(file_bytes) > max_bytes:
-        st.sidebar.error(
-            f"File too large ({len(file_bytes) / 1e6:.1f} MB). "
-            f"Limit is {CONFIG.data.max_file_size_mb} MB."
+        size_mb = len(file_bytes) / 1e6
+        msg = (
+            f"'{uploaded.name}' is {size_mb:.1f} MB, which exceeds the "
+            f"{CONFIG.data.max_file_size_mb} MB limit. Please upload a "
+            f"smaller file or split it into parts."
         )
+        st.session_state.last_upload_error = msg
         return
 
-    with st.spinner(f"Loading {uploaded.name}..."):
-        try:
-            load_result = load_dataframe(file_bytes, uploaded.name)
-            profile = profile_dataframe(load_result.df)
-            st.session_state.load_result = load_result
-            st.session_state.profile = profile
-            st.session_state.clean_result = None
-            st.session_state.chat_history = []
-            st.session_state["df_cleaned"] = load_result.df
-            st.session_state.current_page = "🏠 Home & Data Cleaning"
-        except LoadError as e:
-            st.sidebar.error(f"Could not load file: {e}")
-        except Exception as e:
-            st.sidebar.error(f"Unexpected error: {type(e).__name__}: {e}")
+    try:
+        load_result = load_dataframe(file_bytes, uploaded.name)
+    except LoadError as e:
+        msg = f"Could not load '{uploaded.name}': {e}"
+        logger.warning(msg)
+        st.session_state.last_upload_error = msg
+        return
+    except Exception as e:
+        msg = f"Unexpected error loading '{uploaded.name}': {type(e).__name__}: {e}"
+        logger.exception(msg)
+        st.session_state.last_upload_error = msg
+        return
+
+    if load_result.df is None or load_result.df.empty:
+        msg = (
+            f"'{uploaded.name}' loaded but contains no data rows. "
+            "Please check the file and try again."
+        )
+        st.session_state.last_upload_error = msg
+        return
+
+    try:
+        profile = profile_dataframe(load_result.df)
+    except Exception as e:
+        msg = (
+            f"'{uploaded.name}' loaded, but data profiling failed: "
+            f"{type(e).__name__}: {e}"
+        )
+        logger.exception(msg)
+        st.session_state.last_upload_error = msg
+        return
+
+    # Success
+    st.session_state.load_result = load_result
+    st.session_state.profile = profile
+    st.session_state.clean_result = None
+    st.session_state.chat_history = []
+    st.session_state["df_cleaned"] = load_result.df
+    st.session_state.current_page = "🏠 Home & Data Cleaning"
+    st.session_state.last_upload_error = None
+    logger.info(
+        "Loaded '%s': %d rows x %d cols",
+        uploaded.name,
+        load_result.original_rows,
+        len(load_result.df.columns),
+    )
 
 
 def _render_sidebar() -> tuple[str, object]:
@@ -113,16 +157,20 @@ def _render_sidebar() -> tuple[str, object]:
             "Drag and drop file here",
             type=["csv", "xlsx", "xls", "xlsm"],
             label_visibility="collapsed",
-            help=f"Limit {CONFIG.data.max_file_size_mb}MB per file · CSV, XLSX",
+            help=f"Limit {CONFIG.data.max_file_size_mb}MB per file - CSV, XLSX",
             key="file_uploader",
         )
 
         # Show filename if loaded
         if st.session_state.load_result:
             st.success(
-                f"✅ {st.session_state.load_result.file_name} "
+                f"Loaded: {st.session_state.load_result.file_name} "
                 f"({st.session_state.load_result.original_rows:,} rows)"
             )
+
+        # Persistent upload error/warning in sidebar too
+        if st.session_state.get("last_upload_error"):
+            st.error(st.session_state.last_upload_error)
 
         st.markdown("---")
         st.markdown("**Navigate to:**")
@@ -141,7 +189,7 @@ def _render_sidebar() -> tuple[str, object]:
             disabled = (not has_data) and (p != "🏠 Home & Data Cleaning")
             if st.button(
                 p,
-                width='stretch',
+                width="stretch",
                 disabled=disabled,
                 key=f"nav_{p}",
             ):
@@ -162,8 +210,9 @@ def _inject_custom_css() -> None:
     st.markdown(
         """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    html, body, [class*="css"] {
+        font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
     section[data-testid="stSidebar"] {
         background-color: #0F172A !important;
         border-right: 1px solid rgba(13,148,136,0.2);
@@ -221,25 +270,46 @@ def main() -> None:
 
     page, uploaded = _render_sidebar()
 
-    # Process upload in main body — fixes Streamlit Cloud file bytes bug
+    # Process upload in main body - fixes Streamlit Cloud file bytes bug
     if uploaded is not None:
         _process_upload(uploaded)
 
-    # No file yet
+    # No file yet - show error/warning prominently, then welcome screen
     if st.session_state.load_result is None:
-        st.info("👈 Upload a CSV or Excel file from the sidebar to begin.")
+        if st.session_state.get("last_upload_error"):
+            st.error(
+                f"### ⚠️ Upload failed\n\n{st.session_state.last_upload_error}"
+            )
+            st.info(
+                "Please check the file format and size, then upload again "
+                "using the sidebar."
+            )
+        else:
+            st.info("👈 Upload a CSV or Excel file from the sidebar to begin.")
+
         st.markdown("""
 ### Welcome to Excel Auto-Analyst!
 
 | Step | What it does |
 |------|-------------|
-| 🏠 **Upload & Clean** | Smart cleaning — median imputation, duplicate removal |
+| 🏠 **Upload & Clean** | Smart cleaning - median imputation, duplicate removal |
 | 📈 **Auto-Dashboard** | KPIs, distributions, correlation heatmap |
 | 🎨 **Custom Analysis** | Bar, line, scatter charts with AI insights |
 | 🗣️ **Chat with Data** | Ask questions in plain English |
 | 📋 **PPT Report** | One-click 9-slide executive presentation |
         """)
         return
+
+    # Have data, but show a warning banner if the LAST upload attempt
+    # (e.g. a re-upload of a different file) failed, while keeping the
+    # previously loaded data usable.
+    if st.session_state.get("last_upload_error"):
+        st.warning(
+            f"⚠️ Your last upload attempt failed: "
+            f"{st.session_state.last_upload_error}\n\n"
+            f"Still showing results for "
+            f"**{st.session_state.load_result.file_name}**."
+        )
 
     page_map = {
         "🏠 Home & Data Cleaning": _page_home,
