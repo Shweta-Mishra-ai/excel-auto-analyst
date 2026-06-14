@@ -6,14 +6,7 @@ on:
   pull_request:
     branches: ["main", "develop"]
 
-# ─── WORKFLOW STRATEGY ─────────────────────────────────────────────────────────
-# Branch strategy:
-#   feature/* → runs lint + unit tests
-#   develop   → runs lint + all tests + coverage report
-#   main      → runs everything + deploys to Railway/Render
-
 jobs:
-  # ────────────────────────────────────────────────────────────────
   lint:
     name: "🔍 Ruff Lint & Format Check"
     runs-on: ubuntu-latest
@@ -35,7 +28,6 @@ jobs:
       - name: Ruff — auto format
         run: ruff format .
 
-  # ────────────────────────────────────────────────────────────────
   test:
     name: "🧪 Pytest (Python ${{ matrix.python-version }})"
     runs-on: ubuntu-latest
@@ -75,7 +67,6 @@ jobs:
           file: ./coverage.xml
           fail_ci_if_error: false
 
-  # ────────────────────────────────────────────────────────────────
   security:
     name: "🔐 Security Scan (Bandit)"
     runs-on: ubuntu-latest
@@ -89,7 +80,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install bandit
-        run: pip install bandit[toml]
+        run: pip install "bandit[toml]"
 
       - name: Run bandit security scan
         run: |
@@ -98,7 +89,6 @@ jobs:
             --skip B101,B603 \
             --severity-level medium
 
-  # ────────────────────────────────────────────────────────────────
   docker-build:
     name: "🐳 Docker Build Verification"
     runs-on: ubuntu-latest
@@ -120,21 +110,39 @@ jobs:
           docker logs test-container
           docker stop test-container
 
-  # ────────────────────────────────────────────────────────────────
+  deploy-staging:
+    name: "🚀 Deploy → Staging (develop branch)"
+    runs-on: ubuntu-latest
+    needs: [test, security, docker-build]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Railway (Staging)
+        run: |
+          npm install -g @railway/cli
+          railway up --service excel-auto-analyst-staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+
   deploy-production:
-    name: "🎯 Deploy → Production (Render)"
+    name: "🎯 Deploy → Production (main branch)"
     runs-on: ubuntu-latest
     needs: [test, security, docker-build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
     steps:
-      - name: Trigger Render Deploy Hook
-        if: env.RENDER_DEPLOY_HOOK != ''
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Railway (Production)
         run: |
-          curl -f "$RENDER_DEPLOY_HOOK"
+          npm install -g @railway/cli
+          railway up --service excel-auto-analyst-prod
         env:
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PROD }}
 
       - name: Notify deployment success
         if: success()
         run: |
-          echo "✅ Production deployment complete at $(date)"
+          echo "Production deployment complete at $(date)"

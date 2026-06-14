@@ -141,7 +141,26 @@ docker compose up
 # → http://localhost:8501
 ```
 
----
+### Option 2 — Run Locally
+
+```bash
+# Clone the repo
+git clone https://github.com/Shweta-Mishra-ai/excel-auto-analyst.git
+cd excel-auto-analyst
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Add your free Groq API key
+echo 'GROQ_API_KEY = "gsk_your_key_here"' > .streamlit/secrets.toml
+
+# Run
+streamlit run app.py
+```
+
+Open **http://localhost:8501** 🎉
+
+> 🔑 Get a **free** Groq API key at [console.groq.com](https://console.groq.com)
 
 ## 📊 PPT Report — 9 Slides
 
@@ -164,6 +183,8 @@ docker compose up
 ```bash
 pip install pytest pytest-cov
 pytest tests/ -v --cov=. --cov-report=term-missing
+ruff check .
+ruff format .
 ```
 
 60+ unit tests covering cleaning, stats, AI execution, and report generation.
