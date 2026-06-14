@@ -1,10 +1,13 @@
 """
 ui/pages/custom_analysis_page.py
-Custom Report Builder - with advanced features:
-- Sort (ascending/descending, by Y axis value)
+Custom Report Builder.
+
+Features:
+- Bar, Line, Scatter, Box, Area charts
+- Sort ascending/descending by Y-axis value
 - Top N filter
-- Aggregation method (sum, mean, count, max, min, median)
-- Category filter (multi-select)
+- Aggregation: sum/average/count/max/min/median
+- Category multi-select filter
 - Export chart data as CSV
 - AI insights (Groq, with rule-based fallback)
 """
@@ -19,6 +22,16 @@ import streamlit as st
 from config.settings import CONFIG, get_groq_api_key
 
 logger = logging.getLogger(__name__)
+
+
+_AGG_FUNCS = {
+    "Sum": "sum",
+    "Average": "mean",
+    "Count": "count",
+    "Maximum": "max",
+    "Minimum": "min",
+    "Median": "median",
+}
 
 
 def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
@@ -75,16 +88,6 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
     return "".join(fallback_parts)
 
 
-_AGG_FUNCS = {
-    "Sum": "sum",
-    "Average": "mean",
-    "Count": "count",
-    "Maximum": "max",
-    "Minimum": "min",
-    "Median": "median",
-}
-
-
 def _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n):
     """Apply sort order and top-N limit to a dataframe. Returns new df."""
     if sort_order != "None":
@@ -100,8 +103,147 @@ def _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n):
     return plot_df
 
 
+def _render_advanced_options(cat_cols, df):
+    """Render the advanced options expander. Returns settings dict."""
+    sort_order = "None"
+    agg_method_label = "Sum"
+    top_n = 0
+    filter_col = "None"
+    filter_vals: list = []
+
+    with st.expander("Advanced Options (Sort, Filter, Aggregate)", expanded=True):
+        adv1, adv2, adv3 = st.columns(3)
+
+        with adv1:
+            sort_order = st.selectbox(
+                "Sort Order",
+                ["None", "Ascending up", "Descending down"],
+                key="ca_sort",
+                help="Sort the chart by the Y-axis value",
+            )
+
+        with adv2:
+            agg_method_label = st.selectbox(
+                "Aggregation",
+                list(_AGG_FUNCS.keys()),
+                index=0,
+                key="ca_agg",
+                help=(
+                    "How values combine when X-axis has duplicate categories. "
+                    "Applies to Bar Chart."
+                ),
+            )
+
+        with adv3:
+            top_n = st.number_input(
+                "Show Top N (0 = all)",
+                min_value=0,
+                max_value=100,
+                value=0,
+                step=5,
+                key="ca_topn",
+                help="Limit to top N rows/categories by value. 0 shows all.",
+            )
+
+        if cat_cols:
+            adv4, adv5 = st.columns(2)
+            with adv4:
+                filter_col = st.selectbox(
+                    "Filter by column (optional)",
+                    ["None", *cat_cols],
+                    key="ca_filter_col",
+                )
+            if filter_col != "None":
+                options = sorted(
+                    df[filter_col].dropna().astype(str).unique().tolist()
+                )
+                with adv5:
+                    filter_vals = st.multiselect(
+                        f"Show only these {filter_col} values",
+                        options=options,
+                        default=options,
+                        key="ca_filter_vals",
+                    )
+
+    return {
+        "sort_order": sort_order,
+        "agg_method": _AGG_FUNCS[agg_method_label],
+        "agg_method_label": agg_method_label,
+        "top_n": int(top_n),
+        "filter_col": filter_col,
+        "filter_vals": filter_vals,
+    }
+
+
+def _build_chart(work_df, x_axis, y_axis, chart_type, settings):
+    """Build the plotly figure and the underlying plot dataframe."""
+    sort_order = settings["sort_order"]
+    top_n = settings["top_n"]
+
+    if chart_type == "Bar Chart":
+        plot_df = (
+            work_df.groupby(x_axis)[y_axis]
+            .agg(settings["agg_method"])
+            .reset_index()
+        )
+        plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
+        fig = px.bar(
+            plot_df,
+            x=x_axis,
+            y=y_axis,
+            color=y_axis,
+            title=f"{settings['agg_method_label']} of {y_axis} by {x_axis}",
+            color_continuous_scale="Teal",
+        )
+
+    elif chart_type == "Box Plot":
+        plot_df = work_df[[x_axis, y_axis]].dropna()
+        fig = px.box(
+            plot_df,
+            x=x_axis,
+            y=y_axis,
+            title=f"{y_axis} distribution by {x_axis}",
+            color_discrete_sequence=["#0D9488"],
+        )
+
+    elif chart_type == "Line Chart":
+        plot_df = work_df[[x_axis, y_axis]].dropna().sort_values(by=x_axis)
+        plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
+        fig = px.line(
+            plot_df,
+            x=x_axis,
+            y=y_axis,
+            title=f"{y_axis} trend over {x_axis}",
+            color_discrete_sequence=["#0D9488"],
+        )
+
+    elif chart_type == "Scatter Plot":
+        plot_df = work_df[[x_axis, y_axis]].dropna()
+        plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
+        fig = px.scatter(
+            plot_df,
+            x=x_axis,
+            y=y_axis,
+            title=f"{y_axis} vs {x_axis}",
+            color_discrete_sequence=["#0D9488"],
+        )
+
+    else:  # Area Chart
+        plot_df = work_df[[x_axis, y_axis]].dropna().sort_values(by=x_axis)
+        plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
+        fig = px.area(
+            plot_df,
+            x=x_axis,
+            y=y_axis,
+            title=f"{y_axis} area over {x_axis}",
+            color_discrete_sequence=["#0D9488"],
+        )
+
+    return fig, plot_df
+
+
 def render() -> None:
-    st.title("🎨 Custom Report Builder")
+    st.title("Custom Report Builder")
 
     load_result = st.session_state.load_result
     profile = st.session_state.profile
@@ -123,9 +265,9 @@ def render() -> None:
         return
 
     st.caption(
-        "📊 Using **cleaned** data"
+        "Using cleaned data"
         if clean_result
-        else "⚠️ Using **raw** data - go to Clean & Validate for better accuracy"
+        else "Using raw data - go to Clean & Validate for better accuracy"
     )
 
     # ── Chart configuration ─────────────────────────────────────
@@ -143,12 +285,17 @@ def render() -> None:
             key="ca_chart",
         )
 
-    if st.button("🔍 Generate Analysis", type="primary", width='stretch'):
+    # ── Advanced options (sort, filter, aggregate) ────────────────
+    settings = _render_advanced_options(cat_cols, df)
+
+    if st.button("Generate Analysis", type="primary", width="stretch"):
         st.markdown("---")
 
         # ── Apply category filter ───────────────────────────────
         work_df = df.copy()
-        if filter_col and filter_col != "None" and filter_vals:
+        filter_col = settings["filter_col"]
+        filter_vals = settings["filter_vals"]
+        if filter_col != "None" and filter_vals:
             work_df = work_df[work_df[filter_col].astype(str).isin(filter_vals)]
 
         if work_df.empty:
@@ -157,65 +304,8 @@ def render() -> None:
 
         # ── Build chart ──────────────────────────────────────────
         try:
-            if chart_type == "Bar Chart":
-                plot_df = (
-                    work_df.groupby(x_axis)[y_axis].agg(agg_method).reset_index()
-                )
-                plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
-                fig = px.bar(
-                    plot_df,
-                    x=x_axis,
-                    y=y_axis,
-                    color=y_axis,
-                    title=f"{agg_method_label} of {y_axis} by {x_axis}",
-                    color_continuous_scale="Teal",
-                )
-
-            elif chart_type == "Box Plot":
-                plot_df = work_df[[x_axis, y_axis]].dropna()
-                fig = px.box(
-                    plot_df,
-                    x=x_axis,
-                    y=y_axis,
-                    title=f"{y_axis} distribution by {x_axis}",
-                    color_discrete_sequence=["#0D9488"],
-                )
-
-            elif chart_type == "Line Chart":
-                plot_df = work_df[[x_axis, y_axis]].dropna().sort_values(by=x_axis)
-                plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
-                fig = px.line(
-                    plot_df,
-                    x=x_axis,
-                    y=y_axis,
-                    title=f"{y_axis} trend over {x_axis}",
-                    color_discrete_sequence=["#0D9488"],
-                )
-
-            elif chart_type == "Scatter Plot":
-                plot_df = work_df[[x_axis, y_axis]].dropna()
-                plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
-                fig = px.scatter(
-                    plot_df,
-                    x=x_axis,
-                    y=y_axis,
-                    title=f"{y_axis} vs {x_axis}",
-                    color_discrete_sequence=["#0D9488"],
-                )
-
-            else:  # Area Chart
-                plot_df = work_df[[x_axis, y_axis]].dropna().sort_values(by=x_axis)
-                plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
-                fig = px.area(
-                    plot_df,
-                    x=x_axis,
-                    y=y_axis,
-                    title=f"{y_axis} area over {x_axis}",
-                    color_discrete_sequence=["#0D9488"],
-                )
-
-            st.plotly_chart(fig, width='stretch')
-
+            fig, plot_df = _build_chart(work_df, x_axis, y_axis, chart_type, settings)
+            st.plotly_chart(fig, width="stretch")
         except Exception as e:
             st.error(f"Chart generation failed: {e}")
             return
@@ -223,20 +313,20 @@ def render() -> None:
         # ── Export chart data ────────────────────────────────────
         csv_bytes = plot_df.to_csv(index=False).encode("utf-8")
         st.download_button(
-            label="⬇️ Download Chart Data (CSV)",
+            label="Download Chart Data (CSV)",
             data=csv_bytes,
             file_name=f"chart_data_{x_axis}_{y_axis}.csv",
             mime="text/csv",
         )
 
         # ── AI Insights ───────────────────────────────────────────
-        st.subheader("🤖 AI Insights")
+        st.subheader("AI Insights")
         with st.spinner("Generating insights..."):
             insight_text = _get_ai_insight(x_axis, y_axis, chart_type, work_df)
         st.info(insight_text)
 
         # ── Quick stats ───────────────────────────────────────────
-        with st.expander("📊 Quick Statistics"):
+        with st.expander("Quick Statistics"):
             c1, c2, c3, c4 = st.columns(4)
             c1.metric("Mean", f"{work_df[y_axis].mean():,.2f}")
             c2.metric("Median", f"{work_df[y_axis].median():,.2f}")
