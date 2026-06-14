@@ -46,13 +46,14 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
             from groq import Groq
 
             client = Groq(api_key=api_key)
-            prompt = (
-                f"You are a data analyst. Give 3 bullet point insights for a "
-                f"{chart_type} showing '{y_col}' vs '{x_col}'. "
-                f"Stats: min={min_val:.2f}, max={max_val:.2f}, "
-                f"mean={mean_val:.2f}, trend={trend}. "
-                f"Keep it brief, plain English, no code."
-            )
+            prompt_parts = [
+                "You are a data analyst. Give 3 bullet point insights for a ",
+                f"{chart_type} showing '{y_col}' vs '{x_col}'. ",
+                f"Stats: min={min_val:.2f}, max={max_val:.2f}, ",
+                f"mean={mean_val:.2f}, trend={trend}. ",
+                "Keep it brief, plain English, no code.",
+            ]
+            prompt = "".join(prompt_parts)
             resp = client.chat.completions.create(
                 model=CONFIG.ai.model,
                 messages=[{"role": "user", "content": prompt}],
@@ -63,14 +64,15 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
         except Exception:
             logger.warning("AI insight generation failed, using fallback")
 
-    return (
-        f"* **Observation:** The values for **{y_col}** range from "
-        f"**{min_val:,.2f}** to **{max_val:,.2f}** (mean: {mean_val:,.2f}).\n"
-        f"* **Trend:** Over the course of **{x_col}**, the data appears to "
-        f"be **{trend}**.\n"
-        f"* **Peak:** The highest point helps identify the most performing "
-        f"category or time period."
-    )
+    fallback_parts = [
+        f"* **Observation:** The values for **{y_col}** range from ",
+        f"**{min_val:,.2f}** to **{max_val:,.2f}** (mean: {mean_val:,.2f}).\n",
+        f"* **Trend:** Over the course of **{x_col}**, the data appears to ",
+        f"be **{trend}**.\n",
+        "* **Peak:** The highest point helps identify the most performing ",
+        "category or time period.",
+    ]
+    return "".join(fallback_parts)
 
 
 _AGG_FUNCS = {
@@ -115,8 +117,8 @@ def render() -> None:
 
     if not num_cols:
         st.warning(
-            "No numeric columns found. Custom analysis requires at least "
-            "one numeric column."
+            "No numeric columns found. Custom analysis requires at "
+            "least one numeric column."
         )
         return
 
