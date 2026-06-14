@@ -1,8 +1,6 @@
 """
 app.py — Excel Auto-Analyst v2.0
-─────────────────────────────────────────────────────────────────
 Thin router only. Zero business logic here.
-Matches original navigation: Home | Dashboard | Custom | Chat + PPT Report (new)
 """
 
 from __future__ import annotations
@@ -50,33 +48,91 @@ def _render_error(error: Exception) -> None:
         st.rerun()
 
 
-def _render_sidebar() -> str:
+def _process_upload(uploaded) -> None:
+    """
+    Process uploaded file — called from main body, not sidebar.
+    This fixes the Streamlit Cloud bug where file bytes are lost
+    after rerun when read inside the sidebar.
+    """
+    from core.data_loader import LoadError, load_dataframe
+    from core.validator import profile_dataframe
+
+    # Skip if same file already loaded
+    current_name = (
+        st.session_state.load_result.file_name
+        if st.session_state.load_result
+        else None
+    )
+    if current_name == uploaded.name:
+        return
+
+    # Read bytes immediately — before any rerun can clear them
+    try:
+        file_bytes = uploaded.read()
+    except Exception:
+        st.sidebar.error("Could not read file. Please try again.")
+        return
+
+    if len(file_bytes) == 0:
+        st.sidebar.error("File is empty. Please upload a valid CSV or Excel file.")
+        return
+
+    max_bytes = CONFIG.data.max_file_size_mb * 1024 * 1024
+    if len(file_bytes) > max_bytes:
+        st.sidebar.error(
+            f"File too large ({len(file_bytes) / 1e6:.1f} MB). "
+            f"Limit is {CONFIG.data.max_file_size_mb} MB."
+        )
+        return
+
+    with st.spinner(f"Loading {uploaded.name}..."):
+        try:
+            load_result = load_dataframe(file_bytes, uploaded.name)
+            profile = profile_dataframe(load_result.df)
+            st.session_state.load_result = load_result
+            st.session_state.profile = profile
+            st.session_state.clean_result = None
+            st.session_state.chat_history = []
+            st.session_state["df_cleaned"] = load_result.df
+            st.session_state.current_page = "🏠 Home & Data Cleaning"
+        except LoadError as e:
+            st.sidebar.error(f"Could not load file: {e}")
+        except Exception as e:
+            st.sidebar.error(f"Unexpected error: {type(e).__name__}: {e}")
+
+
+def _render_sidebar() -> tuple[str, object]:
+    """Render sidebar. Returns (current_page, uploaded_file_or_None)."""
+    uploaded = None
     with st.sidebar:
         st.title("📊 Auto-Analyst")
         st.write("Upload your data and navigate through the tabs below.")
 
-        # ── File upload ───────────────────────────────────────────
         st.markdown("**Upload Excel/CSV**")
         uploaded = st.file_uploader(
             "Drag and drop file here",
             type=["csv", "xlsx", "xls", "xlsm"],
             label_visibility="collapsed",
             help=f"Limit {CONFIG.data.max_file_size_mb}MB per file · CSV, XLSX",
+            key="file_uploader",
         )
 
-        if uploaded is not None:
-            _handle_upload(uploaded)
+        # Show filename if loaded
+        if st.session_state.load_result:
+            st.success(
+                f"✅ {st.session_state.load_result.file_name} "
+                f"({st.session_state.load_result.original_rows:,} rows)"
+            )
 
         st.markdown("---")
         st.markdown("**Navigate to:**")
 
-        # Same pages as original + PPT Report (new)
         pages = [
             "🏠 Home & Data Cleaning",
             "📈 Auto-Dashboard",
             "🎨 Custom Analysis",
             "🗣️ Chat with Data",
-            "📋 PPT Report",  # NEW feature
+            "📋 PPT Report",
         ]
 
         has_data = st.session_state.load_result is not None
@@ -84,11 +140,13 @@ def _render_sidebar() -> str:
         for p in pages:
             disabled = (not has_data) and (p != "🏠 Home & Data Cleaning")
             if st.button(
-                p, use_container_width=True, disabled=disabled, key=f"nav_{p}"
+                p,
+                width='stretch',
+                disabled=disabled,
+                key=f"nav_{p}",
             ):
                 st.session_state.current_page = p
 
-        # Quality badge
         if st.session_state.profile:
             qs = st.session_state.profile.quality_score
             color = "green" if qs >= 75 else "orange" if qs >= 50 else "red"
@@ -97,43 +155,31 @@ def _render_sidebar() -> str:
         st.markdown("---")
         st.info("Built with Streamlit & Python")
 
-    return st.session_state.current_page
+    return st.session_state.current_page, uploaded
 
 
-def _handle_upload(uploaded) -> None:
-    """Load, validate, profile — only re-runs when file changes."""
-    from core.data_loader import LoadError, load_dataframe
-    from core.validator import profile_dataframe
-
-    # Only re-process if new file
-    current_name = (
-        st.session_state.load_result.file_name if st.session_state.load_result else None
+def _inject_custom_css() -> None:
+    st.markdown(
+        """
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    section[data-testid="stSidebar"] {
+        background-color: #0F172A !important;
+        border-right: 1px solid rgba(13,148,136,0.2);
+    }
+    div[data-testid="stMetric"] {
+        background: rgba(30,41,59,0.4);
+        padding: 15px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(226,232,240,0.08);
+    }
+    h1, h2, h3 { font-weight: 600 !important; }
+    a { color: #0D9488 !important; }
+</style>
+    """,
+        unsafe_allow_html=True,
     )
-    if current_name == uploaded.name:
-        return
-
-    file_bytes = uploaded.read()
-    max_bytes = CONFIG.data.max_file_size_mb * 1024 * 1024
-    if len(file_bytes) > max_bytes:
-        st.error(
-            f"File too large ({len(file_bytes) / 1e6:.1f} MB). Limit: {CONFIG.data.max_file_size_mb} MB."
-        )
-        return
-
-    with st.spinner("Loading data..."):
-        try:
-            load_result = load_dataframe(file_bytes, uploaded.name)
-            profile = profile_dataframe(load_result.df)
-            st.session_state.load_result = load_result
-            st.session_state.profile = profile
-            st.session_state.clean_result = None
-            st.session_state.chat_history = []
-            # Also store in old-style session key for compatibility
-            st.session_state["df_cleaned"] = load_result.df
-        except LoadError as e:
-            st.error(f"Could not load file: {e}")
-        except Exception as e:
-            st.error(f"Unexpected error: {type(e).__name__}: {e}")
 
 
 # ── Page renderers ────────────────────────────────────────────────
@@ -169,88 +215,29 @@ def _page_report():
     render()
 
 
-def _inject_custom_css() -> None:
-    st.markdown(
-        """
-<style>
-    /* Google Fonts import */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* Style sidebar */
-    section[data-testid="stSidebar"] {
-        background-color: #0F172A !important;
-        border-right: 1px solid rgba(13, 148, 136, 0.2);
-    }
-
-    /* Styled navigation buttons */
-    div[data-testid="stVerticalBlock"] button {
-        background-color: rgba(30, 41, 59, 0.5) !important;
-        color: #E2E8F0 !important;
-        border: 1px solid rgba(226, 232, 240, 0.1) !important;
-        border-radius: 8px !important;
-        transition: all 0.3s ease !important;
-    }
-    div[data-testid="stVerticalBlock"] button:hover {
-        background-color: rgba(13, 148, 136, 0.15) !important;
-        border-color: #0D9488 !important;
-        color: #0D9488 !important;
-    }
-
-    /* Style metric cards */
-    div[data-testid="stMetric"] {
-        background: rgba(30, 41, 59, 0.4);
-        padding: 15px 20px;
-        border-radius: 12px;
-        border: 1px solid rgba(226, 232, 240, 0.08);
-        transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-    div[data-testid="stMetric"]:hover {
-        transform: translateY(-2px);
-        border-color: rgba(13, 148, 136, 0.4);
-    }
-
-    /* Header fonts */
-    h1, h2, h3 {
-        font-weight: 600 !important;
-    }
-
-    /* Links and highlight styling */
-    a {
-        color: #0D9488 !important;
-    }
-
-    /* Success message custom styling */
-    div.stAlert {
-        border-radius: 10px !important;
-        border: 1px solid rgba(13, 148, 136, 0.2) !important;
-        background-color: rgba(13, 148, 136, 0.05) !important;
-    }
-</style>
-    """,
-        unsafe_allow_html=True,
-    )
-
-
 def main() -> None:
     _init_session_state()
     _inject_custom_css()
-    page = _render_sidebar()
 
-    # No file uploaded yet
-    if st.session_state.load_result is None and page != "🏠 Home & Data Cleaning":
-        st.info("👈 Please upload a CSV or Excel file from the sidebar to begin.")
+    page, uploaded = _render_sidebar()
+
+    # Process upload in main body — fixes Streamlit Cloud file bytes bug
+    if uploaded is not None:
+        _process_upload(uploaded)
+
+    # No file yet
+    if st.session_state.load_result is None:
+        st.info("👈 Upload a CSV or Excel file from the sidebar to begin.")
         st.markdown("""
 ### Welcome to Excel Auto-Analyst!
-This app helps you:
-1. **Clean Data** — remove duplicates, smart imputation (not just fill with 0)
-2. **Visualize** — instant dashboards with KPIs, distributions, correlations
-3. **Analyse** — custom charts with AI-powered insights
-4. **Chat** — ask questions in plain English, AI generates charts & answers
-5. **Report** — one-click executive PowerPoint report generation *(new!)*
+
+| Step | What it does |
+|------|-------------|
+| 🏠 **Upload & Clean** | Smart cleaning — median imputation, duplicate removal |
+| 📈 **Auto-Dashboard** | KPIs, distributions, correlation heatmap |
+| 🎨 **Custom Analysis** | Bar, line, scatter charts with AI insights |
+| 🗣️ **Chat with Data** | Ask questions in plain English |
+| 📋 **PPT Report** | One-click 9-slide executive presentation |
         """)
         return
 

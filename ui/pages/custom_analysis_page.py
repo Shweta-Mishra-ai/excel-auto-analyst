@@ -143,66 +143,7 @@ def render() -> None:
             key="ca_chart",
         )
 
-    # ── Advanced options (NEW - requested by Babi feedback) ───────
-    with st.expander("⚙️ Advanced Options (Sort, Filter, Aggregate)", expanded=True):
-        adv1, adv2, adv3 = st.columns(3)
-
-        with adv1:
-            sort_order = st.selectbox(
-                "Sort Order",
-                ["None", "Ascending ↑", "Descending ↓"],
-                key="ca_sort",
-                help="Sort the chart by the Y-axis value",
-            )
-
-        with adv2:
-            agg_method_label = st.selectbox(
-                "Aggregation",
-                list(_AGG_FUNCS.keys()),
-                index=0,
-                key="ca_agg",
-                help=(
-                    "How to combine values when X-axis has duplicates "
-                    "(e.g. multiple rows per category). Applies to Bar Chart."
-                ),
-            )
-            agg_method = _AGG_FUNCS[agg_method_label]
-
-        with adv3:
-            top_n = st.number_input(
-                "Show Top N (0 = all)",
-                min_value=0,
-                max_value=100,
-                value=0,
-                step=5,
-                key="ca_topn",
-                help="Limit to top N rows/categories by value. 0 shows everything.",
-            )
-
-        # Category filter (only if categorical columns exist)
-        filter_col = None
-        filter_vals: list = []
-        if cat_cols:
-            adv4, adv5 = st.columns(2)
-            with adv4:
-                filter_col = st.selectbox(
-                    "Filter by column (optional)",
-                    ["None", *cat_cols],
-                    key="ca_filter_col",
-                )
-            if filter_col and filter_col != "None":
-                options = sorted(
-                    df[filter_col].dropna().astype(str).unique().tolist()
-                )
-                with adv5:
-                    filter_vals = st.multiselect(
-                        f"Show only these {filter_col} values",
-                        options=options,
-                        default=options,
-                        key="ca_filter_vals",
-                    )
-
-    if st.button("🔍 Generate Analysis", type="primary", width="stretch"):
+    if st.button("🔍 Generate Analysis", type="primary", width='stretch'):
         st.markdown("---")
 
         # ── Apply category filter ───────────────────────────────
@@ -273,7 +214,7 @@ def render() -> None:
                     color_discrete_sequence=["#0D9488"],
                 )
 
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, width='stretch')
 
         except Exception as e:
             st.error(f"Chart generation failed: {e}")

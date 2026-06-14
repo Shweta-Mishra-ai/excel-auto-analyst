@@ -25,9 +25,8 @@ jobs:
       - name: Ruff — check linting
         run: ruff check . --output-format=github
 
-      - name: Ruff — auto format (non-blocking)
+      - name: Ruff — auto format
         run: ruff format .
-        continue-on-error: true
 
   test:
     name: "🧪 Pytest (Python ${{ matrix.python-version }})"
