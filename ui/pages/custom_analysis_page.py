@@ -11,10 +11,14 @@ Custom Report Builder - with advanced features:
 
 from __future__ import annotations
 
+import logging
+
 import plotly.express as px
 import streamlit as st
 
 from config.settings import CONFIG, get_groq_api_key
+
+logger = logging.getLogger(__name__)
 
 
 def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
@@ -34,7 +38,7 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
             elif end_val < start_val * 0.95:
                 trend = "decreasing"
     except Exception:
-        pass
+        logger.debug("Trend detection failed for %s vs %s", x_col, y_col)
 
     api_key = get_groq_api_key()
     if api_key:
@@ -57,7 +61,7 @@ def _get_ai_insight(x_col: str, y_col: str, chart_type: str, df) -> str:
             )
             return resp.choices[0].message.content
         except Exception:
-            pass
+            logger.warning("AI insight generation failed, using fallback")
 
     return (
         f"* **Observation:** The values for **{y_col}** range from "
