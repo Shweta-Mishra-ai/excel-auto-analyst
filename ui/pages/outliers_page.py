@@ -91,7 +91,7 @@ def render() -> None:
         }
         for col, r in all_outliers.items()
     ]
-    st.dataframe(summary, width='stretch')
+    st.dataframe(summary, width="stretch")
 
     # ── Visual inspection ─────────────────────────────────────────
     st.subheader("Visual Inspection")
@@ -126,9 +126,9 @@ def render() -> None:
         fig.update_layout(
             plot_bgcolor="#0F172A", paper_bgcolor="#0F172A", font_color="#F8FAFC"
         )
-        st.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, width="stretch")
 
         if result.outlier_count > 0:
             with st.expander(f"Show {result.outlier_count} outlier rows"):
                 outlier_rows = df.loc[result.outlier_indices]
-                st.dataframe(outlier_rows, width='stretch')
+                st.dataframe(outlier_rows, width="stretch")

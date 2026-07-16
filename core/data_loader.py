@@ -66,6 +66,8 @@ def _read_csv(content: bytes) -> pd.DataFrame:
                 encoding=encoding,
                 low_memory=False,
             )
+        except MemoryError:
+            raise LoadError("File too large to process in memory (MemoryError).") from None
         except UnicodeDecodeError:
             continue
     raise LoadError("Could not decode CSV. Try saving as UTF-8 from Excel.")
@@ -74,6 +76,8 @@ def _read_csv(content: bytes) -> pd.DataFrame:
 def _read_excel(content: bytes) -> pd.DataFrame:
     try:
         return pd.read_excel(io.BytesIO(content), engine="openpyxl")
+    except MemoryError:
+        raise LoadError("File too large to process in memory (MemoryError).") from None
     except Exception as exc:
         raise LoadError(f"Failed to read Excel file: {exc}") from exc
 

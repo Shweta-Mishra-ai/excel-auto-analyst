@@ -19,6 +19,7 @@ def _get_groq_client():
         return None
     try:
         from groq import Groq
+
         return Groq(api_key=api_key)
     except Exception:
         return None
@@ -55,14 +56,14 @@ def render() -> None:
     st.caption("Ask questions in plain English — AI generates insights & charts.")
 
     load_result = st.session_state.get("load_result")
-    profile     = st.session_state.get("profile")
+    profile = st.session_state.get("profile")
     clean_result = st.session_state.get("clean_result")
 
     if load_result is None or profile is None:
         st.warning("👈 Please upload a file first from the sidebar.")
         return
 
-    df     = clean_result.df if clean_result else load_result.df
+    df = clean_result.df if clean_result else load_result.df
     client = _get_groq_client()
 
     if client is None:
@@ -99,8 +100,7 @@ def render() -> None:
 
         cols = st.columns(2)
         for i, suggestion in enumerate(suggestions):
-            if cols[i % 2].button(suggestion, key=f"sugg_{i}",
-                                   width='stretch'):
+            if cols[i % 2].button(suggestion, key=f"sugg_{i}", width="stretch"):
                 st.session_state.chat_history.append(
                     {"role": "user", "content": suggestion}
                 )
@@ -114,13 +114,16 @@ def render() -> None:
                     st.markdown(msg["output"])
                 if msg.get("figure"):
                     try:
-                        st.plotly_chart(msg["figure"], width='stretch')
+                        st.plotly_chart(msg["figure"], width="stretch")
                     except Exception:
                         st.info("Chart cannot be re-rendered — ask again.")
                 if msg.get("error"):
                     st.warning(msg["error"])
-                if (not msg.get("output") and not msg.get("figure")
-                        and not msg.get("error")):
+                if (
+                    not msg.get("output")
+                    and not msg.get("figure")
+                    and not msg.get("error")
+                ):
                     st.markdown(msg.get("content", ""))
             else:
                 st.markdown(msg["content"])
@@ -134,14 +137,12 @@ def render() -> None:
     if not user_input:
         if st.session_state.chat_history:
             st.divider()
-            if st.button("Clear conversation", width='stretch'):
+            if st.button("Clear conversation", width="stretch"):
                 st.session_state.chat_history = []
                 st.rerun()
         return
 
-    st.session_state.chat_history.append(
-        {"role": "user", "content": user_input}
-    )
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
 
     with st.chat_message("user"):
         st.markdown(user_input)
@@ -159,10 +160,15 @@ def render() -> None:
             except Exception as e:
                 err = f"AI call failed: {type(e).__name__}: {e}"
                 st.error(err)
-                st.session_state.chat_history.append({
-                    "role": "assistant", "content": err,
-                    "output": None, "figure": None, "error": err,
-                })
+                st.session_state.chat_history.append(
+                    {
+                        "role": "assistant",
+                        "content": err,
+                        "output": None,
+                        "figure": None,
+                        "error": err,
+                    }
+                )
                 return
 
         assistant_msg: dict = {
@@ -189,7 +195,7 @@ def render() -> None:
                 st.markdown(result.output)
                 assistant_msg["output"] = result.output
             if result.figure:
-                st.plotly_chart(result.figure, width='stretch')
+                st.plotly_chart(result.figure, width="stretch")
                 assistant_msg["figure"] = result.figure
             if not result.output and not result.figure:
                 fallback = (

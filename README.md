@@ -24,7 +24,9 @@
 
 ## 🎬 Demo
 
-https://github.com/Shweta-Mishra-ai/excel-auto-analyst/releases/download/v2.0.0/Excel.demo.mp4
+<video src="https://github.com/Shweta-Mishra-ai/excel-auto-analyst/releases/download/v2.0.0/Excel.demo.mp4" controls="controls" muted="muted" autoplay="autoplay" width="100%">
+  Your browser does not support the video tag.
+</video>
 
 ---
 
@@ -43,31 +45,47 @@ https://github.com/Shweta-Mishra-ai/excel-auto-analyst/releases/download/v2.0.0/
 
 ## 🏗️ Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                        app.py                           │
-│              (thin router — no business logic)          │
-└───────────┬──────────────────────────────────┬──────────┘
-            │                                  │
-     ┌──────▼──────┐                   ┌───────▼───────┐
-     │    core/    │                   │      ui/      │
-     │─────────────│                   │───────────────│
-     │ data_loader │                   │  upload_page  │
-     │  validator  │                   │   stats_page  │
-     │   cleaner   │                   │  custom_page  │
-     └──────┬──────┘                   │   chat_page   │
-            │                          │  report_page  │
-     ┌──────▼──────┐                   └───────────────┘
-     │ analytics/  │
-     │─────────────│         ┌──────────────────────┐
-     │ stats_engine│         │         ai/          │
-     └─────────────┘         │──────────────────────│
-                             │   safe_executor      │
-     ┌─────────────┐         │  (AST sandbox)       │
-     │  reports/   │         │   prompt_builder     │
-     │─────────────│         └──────────────────────┘
-     │ ppt_generator         
-     └─────────────┘
+```mermaid
+flowchart TB
+    App["app.py (thin router)"]
+
+    subgraph Core["core/"]
+        DL[data_loader.py]
+        VA[validator.py]
+        CL[cleaner.py]
+    end
+
+    subgraph Analytics["analytics/"]
+        SE[stats_engine.py]
+    end
+
+    subgraph AI["ai/"]
+        SX["safe_executor.py"]
+        PB[prompt_builder.py]
+    end
+
+    subgraph Reports["reports/"]
+        PG[ppt_generator.py]
+    end
+
+    subgraph UI["ui/pages/"]
+        UP[upload_page.py]
+        SP[stats_page.py]
+        CP[custom_page.py]
+        CHP[chat_page.py]
+        RP[report_page.py]
+    end
+
+    App --> Core
+    App --> UI
+    Core --> Analytics
+    Analytics --> Reports
+    UI --> AI
+    UI --> Reports
+    AI --> Reports
+
+    style App fill:#0d6efd,color:#fff
+    style SX fill:#ef4444,color:#fff
 ```
 
 ---
@@ -141,26 +159,7 @@ docker compose up
 # → http://localhost:8501
 ```
 
-### Option 2 — Run Locally
 
-```bash
-# Clone the repo
-git clone https://github.com/Shweta-Mishra-ai/excel-auto-analyst.git
-cd excel-auto-analyst
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Add your free Groq API key
-echo 'GROQ_API_KEY = "gsk_your_key_here"' > .streamlit/secrets.toml
-
-# Run
-streamlit run app.py
-```
-
-Open **http://localhost:8501** 🎉
-
-> 🔑 Get a **free** Groq API key at [console.groq.com](https://console.groq.com)
 
 ## 📊 PPT Report — 9 Slides
 
