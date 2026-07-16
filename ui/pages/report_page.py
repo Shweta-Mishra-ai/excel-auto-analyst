@@ -133,7 +133,7 @@ def render() -> None:
     st.divider()
 
     # ── Generate button ───────────────────────────────────────────
-    if st.button("🎯 Generate PPT Report", type="primary", width='stretch'):
+    if st.button("🎯 Generate PPT Report", type="primary", width="stretch"):
         progress = st.progress(0, text="Preparing data...")
 
         try:
@@ -204,7 +204,7 @@ def render() -> None:
             data=ppt_bytes,
             file_name=report_filename,
             mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            width='stretch',
+            width="stretch",
         )
 
         st.balloons()

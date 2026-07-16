@@ -121,7 +121,9 @@ def _infer_semantic_type(series: pd.Series, dtype: str) -> SemanticType:
         return SemanticType.BOOLEAN
     non_null = series.dropna().unique()
     bool_vals = {0, 1, "0", "1", "true", "false", "True", "False"}
-    if len(non_null) <= 2 and all(str(v) in {str(b) for b in bool_vals} for v in non_null):
+    if len(non_null) <= 2 and all(
+        str(v) in {str(b) for b in bool_vals} for v in non_null
+    ):
         return SemanticType.BOOLEAN
 
     # Datetime dtype
@@ -250,7 +252,9 @@ def profile_dataframe(df: pd.DataFrame) -> DataProfile:
 
     total_cells = len(df) * len(df.columns)
     total_missing = int(df.isna().sum().sum())
-    missing_pct = round(total_missing / total_cells * 100, 2) if total_cells > 0 else 0.0
+    missing_pct = (
+        round(total_missing / total_cells * 100, 2) if total_cells > 0 else 0.0
+    )
     dup_count = int(df.duplicated().sum())
 
     partial = DataProfile(

@@ -154,9 +154,7 @@ def _render_advanced_options(cat_cols, df):
                     key="ca_filter_col",
                 )
             if filter_col != "None":
-                options = sorted(
-                    df[filter_col].dropna().astype(str).unique().tolist()
-                )
+                options = sorted(df[filter_col].dropna().astype(str).unique().tolist())
                 with adv5:
                     filter_vals = st.multiselect(
                         f"Show only these {filter_col} values",
@@ -182,9 +180,7 @@ def _build_chart(work_df, x_axis, y_axis, chart_type, settings):
 
     if chart_type == "Bar Chart":
         plot_df = (
-            work_df.groupby(x_axis)[y_axis]
-            .agg(settings["agg_method"])
-            .reset_index()
+            work_df.groupby(x_axis)[y_axis].agg(settings["agg_method"]).reset_index()
         )
         plot_df = _apply_sort_and_top_n(plot_df, y_axis, sort_order, top_n)
         fig = px.bar(
@@ -273,9 +269,7 @@ def render() -> None:
     # ── Chart configuration ─────────────────────────────────────
     col1, col2, col3 = st.columns(3)
     with col1:
-        x_axis = st.selectbox(
-            "X-Axis (Category/Time)", df.columns.tolist(), key="ca_x"
-        )
+        x_axis = st.selectbox("X-Axis (Category/Time)", df.columns.tolist(), key="ca_x")
     with col2:
         y_axis = st.selectbox("Y-Axis (Values)", num_cols, key="ca_y")
     with col3:

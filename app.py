@@ -62,9 +62,7 @@ def _process_upload(uploaded) -> None:
 
     # Skip if this exact file was already successfully loaded
     current_name = (
-        st.session_state.load_result.file_name
-        if st.session_state.load_result
-        else None
+        st.session_state.load_result.file_name if st.session_state.load_result else None
     )
     if current_name == uploaded.name:
         return
@@ -98,10 +96,15 @@ def _process_upload(uploaded) -> None:
         return
 
     try:
-        load_result = load_dataframe(file_bytes, uploaded.name)
+        with st.spinner(f"Loading '{uploaded.name}'..."):
+            load_result = load_dataframe(file_bytes, uploaded.name)
     except LoadError as e:
         msg = f"Could not load '{uploaded.name}': {e}"
         logger.warning(msg)
+        st.session_state.last_upload_error = msg
+        return
+    except MemoryError:
+        msg = f"'{uploaded.name}' is too large to fit in memory. Please reduce the file size."
         st.session_state.last_upload_error = msg
         return
     except Exception as e:
@@ -119,7 +122,13 @@ def _process_upload(uploaded) -> None:
         return
 
     try:
-        profile = profile_dataframe(load_result.df)
+        with st.spinner("Profiling data quality..."):
+            profile = profile_dataframe(load_result.df)
+    except MemoryError:
+        msg = "Ran out of memory while profiling data. Try a smaller dataset."
+        logger.error(msg)
+        st.session_state.last_upload_error = msg
+        return
     except Exception as e:
         msg = (
             f"'{uploaded.name}' loaded, but data profiling failed: "
@@ -277,9 +286,7 @@ def main() -> None:
     # No file yet - show error/warning prominently, then welcome screen
     if st.session_state.load_result is None:
         if st.session_state.get("last_upload_error"):
-            st.error(
-                f"### ⚠️ Upload failed\n\n{st.session_state.last_upload_error}"
-            )
+            st.error(f"### ⚠️ Upload failed\n\n{st.session_state.last_upload_error}")
             st.info(
                 "Please check the file format and size, then upload again "
                 "using the sidebar."
