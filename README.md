@@ -5,7 +5,8 @@
 <p><strong>Upload any CSV or Excel file → Auto-clean → Dashboard → Chat with AI → Export PPT</strong></p>
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-0d6efd?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.37%2B-ff4b4b?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.37%2B-ff4b4b?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io) 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-auto-analyst-ne9ocshgvqtvqtitbapbjs.streamlit.app)
 [![Groq · LLaMA 3.3](https://img.shields.io/badge/Groq-LLaMA%203.3-f97316?style=flat-square)](https://groq.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Shweta-Mishra-ai/excel-auto-analyst?style=flat-square&color=facc15&cacheSeconds=3600)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/stargazers)
