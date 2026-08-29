@@ -21,7 +21,7 @@ class DataLimits:
     max_rows: int = 500_000
     max_columns: int = 500
     preview_rows: int = 5
-    sample_rows_for_ai: int = 3
+    sample_rows_for_ai: int = 10
 
 
 # ─── Cleaning Strategy ───────────────────────────────────────────
@@ -42,7 +42,7 @@ class CleaningConfig:
 # ─── AI / LLM ────────────────────────────────────────────────────
 @dataclass(frozen=True)
 class AIConfig:
-    model: str = "llama-3.3-70b-versatile"
+    model: str = "openai/gpt-oss-120b"
     temperature: float = 0.0
     max_tokens: int = 1024
     # Safe execution limits

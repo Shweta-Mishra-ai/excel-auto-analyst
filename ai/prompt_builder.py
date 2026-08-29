@@ -36,7 +36,7 @@ def build_chat_system_prompt(df: pd.DataFrame, profile: DataProfile) -> str:
             info["top_values"] = [v[0] for v in col_profile.top_values[:3]]
         columns_info.append(info)
 
-    sample_rows = df.head(CONFIG.ai.max_tokens // 200).to_string(max_cols=10)
+    sample_rows = df.head(CONFIG.data.sample_rows_for_ai).to_string(max_cols=10)
 
     allowed = sorted(CONFIG.ai.allowed_modules)
 

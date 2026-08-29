@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9%2B-0d6efd?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.37%2B-ff4b4b?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io) 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://excel-auto-analyst-ne9ocshgvqtvqtitbapbjs.streamlit.app)
-[![Groq · LLaMA 3.3](https://img.shields.io/badge/Groq-LLaMA%203.3-f97316?style=flat-square)](https://groq.com)
+[![Groq · gpt-oss-120b](https://img.shields.io/badge/Groq-gpt--oss--120b-f97316?style=flat-square)](https://groq.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/Shweta-Mishra-ai/excel-auto-analyst?style=flat-square&color=facc15&cacheSeconds=3600)](https://github.com/Shweta-Mishra-ai/excel-auto-analyst/stargazers)
 
@@ -40,7 +40,7 @@
 | 🎨 | **Custom Charts** | Bar, line, scatter, box, area — with AI-written insights per chart |
 | 💬 | **Chat with Your Data** | Ask questions in plain English — AI writes and runs the code for you |
 | 📋 | **One-Click PPT Export** | 9-slide executive PowerPoint with real embedded charts |
-| 🔐 | **Secure AI Execution** | AST-sandboxed code runner — no raw `exec()`, ever |
+| 🔐 | **Secure AI Execution** | AST-validated, builtins-locked sandbox for AI-generated code |
 
 ---
 
