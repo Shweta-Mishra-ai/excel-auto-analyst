@@ -43,6 +43,17 @@ class TestValidateAST:
     def test_dunder_attribute_blocked(self):
         assert _validate_ast("x = df.__class__.__bases__") is not None
 
+    def test_getattr_blocked(self):
+        """getattr() can reach dunder attributes via a string, bypassing the
+        AST check on literal `.__dunder__` access — must be blocked by name."""
+        assert _validate_ast("getattr(df, '__class__')") is not None
+
+    def test_globals_blocked(self):
+        assert _validate_ast("globals()") is not None
+
+    def test_vars_blocked(self):
+        assert _validate_ast("vars(df)") is not None
+
     def test_unallowed_import_blocked(self):
         """Unallowed imports are blocked by AST validation."""
         assert _validate_ast("import requests") is not None
@@ -119,6 +130,15 @@ class TestExecuteSafe:
     def test_no_figure_when_none_created(self, sample_df):
         r = execute_safe("print('hello')", sample_df)
         assert r.figure is None
+
+    def test_dict_like_output_not_blanked(self, sample_df):
+        """Regression: legitimate output starting with '{' and >200 chars
+        must not be silently discarded."""
+        code = "d = {f'key_{i}': i for i in range(30)}\nprint(d)"
+        r = execute_safe(code, sample_df)
+        assert r.success is True
+        assert r.output.strip() != ""
+        assert "key_0" in r.output
 
     def test_signal_value_error_fallback(self, sample_df):
         """Verify that if signal.signal raises ValueError (e.g. running in a thread), we fall back to threading and succeed."""

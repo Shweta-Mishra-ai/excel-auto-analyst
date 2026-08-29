@@ -742,7 +742,7 @@ def generate_ppt_report(report_input: ReportInput) -> bytes:
     txt(
         s, "AI-GENERATED INSIGHTS", 0.4, 0.18, 12, 0.65, size=22, bold=True, color=white
     )
-    txt(s, "Powered by Groq LLaMA-3.3", 0.4, 0.65, 12, 0.35, size=11, color=slate)
+    txt(s, "Powered by Groq AI", 0.4, 0.65, 12, 0.35, size=11, color=slate)
     if ri.ai_insights:
         headline = ri.ai_insights.get("headline", "")
         rect(s, 0.4, 1.1, 12.5, 0.75, RGBColor(0x2D, 0x1B, 0x45))

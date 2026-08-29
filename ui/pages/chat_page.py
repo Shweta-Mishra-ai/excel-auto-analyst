@@ -6,23 +6,29 @@ All noqa directives removed, proper exception handling.
 
 from __future__ import annotations
 
+import logging
+
 import streamlit as st
 
 from ai.prompt_builder import build_chat_system_prompt
 from ai.safe_executor import execute_safe
 from config.settings import CONFIG, get_groq_api_key
 
+logger = logging.getLogger(__name__)
+
 
 def _get_groq_client():
+    """Return (client, error). error is None on success, else a short reason."""
     api_key = get_groq_api_key()
     if not api_key:
-        return None
+        return None, "missing_key"
     try:
         from groq import Groq
 
-        return Groq(api_key=api_key)
-    except Exception:
-        return None
+        return Groq(api_key=api_key), None
+    except Exception as e:
+        logger.exception("Failed to initialise Groq client")
+        return None, f"{type(e).__name__}: {e}"
 
 
 def _call_llm(client, system_prompt: str, history: list[dict]) -> str:
@@ -64,15 +70,18 @@ def render() -> None:
         return
 
     df = clean_result.df if clean_result else load_result.df
-    client = _get_groq_client()
+    client, client_error = _get_groq_client()
 
     if client is None:
-        st.error("GROQ_API_KEY not configured.")
-        st.info(
-            "Add your key to `.streamlit/secrets.toml`:\n"
-            "```\nGROQ_API_KEY = 'gsk_your_key_here'\n```\n"
-            "Get a free key at [console.groq.com](https://console.groq.com)"
-        )
+        if client_error == "missing_key":
+            st.error("GROQ_API_KEY not configured.")
+            st.info(
+                "Add your key to `.streamlit/secrets.toml`:\n"
+                "```\nGROQ_API_KEY = 'gsk_your_key_here'\n```\n"
+                "Get a free key at [console.groq.com](https://console.groq.com)"
+            )
+        else:
+            st.error(f"Could not initialise the Groq client: {client_error}")
         return
 
     system_prompt = build_chat_system_prompt(df, profile)

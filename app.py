@@ -187,6 +187,7 @@ def _render_sidebar() -> tuple[str, object]:
         pages = [
             "🏠 Home & Data Cleaning",
             "📈 Auto-Dashboard",
+            "🔍 Outlier Analysis",
             "🎨 Custom Analysis",
             "🗣️ Chat with Data",
             "📋 PPT Report",
@@ -255,6 +256,12 @@ def _page_dashboard():
     render()
 
 
+def _page_outliers():
+    from ui.pages.outliers_page import render
+
+    render()
+
+
 def _page_custom():
     from ui.pages.custom_analysis_page import render
 
@@ -301,6 +308,7 @@ def main() -> None:
 |------|-------------|
 | 🏠 **Upload & Clean** | Smart cleaning - median imputation, duplicate removal |
 | 📈 **Auto-Dashboard** | KPIs, distributions, correlation heatmap |
+| 🔍 **Outlier Analysis** | IQR / Z-Score detection with adjustable thresholds |
 | 🎨 **Custom Analysis** | Bar, line, scatter charts with AI insights |
 | 🗣️ **Chat with Data** | Ask questions in plain English |
 | 📋 **PPT Report** | One-click 9-slide executive presentation |
@@ -321,6 +329,7 @@ def main() -> None:
     page_map = {
         "🏠 Home & Data Cleaning": _page_home,
         "📈 Auto-Dashboard": _page_dashboard,
+        "🔍 Outlier Analysis": _page_outliers,
         "🎨 Custom Analysis": _page_custom,
         "🗣️ Chat with Data": _page_chat,
         "📋 PPT Report": _page_report,

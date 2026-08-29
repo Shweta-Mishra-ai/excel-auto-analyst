@@ -4,7 +4,13 @@ Sandboxed code execution for AI-generated Python.
 Fixes:
   - Windows: signal.SIGALRM not available → platform-safe timeout
   - plotly lazy import
-  - RestrictedPython optional
+
+Security model: AST validation (blocked names, blocked imports, no dunder
+attribute access) plus an empty `__builtins__` mapping so exec() cannot fall
+back to the real builtins module. RestrictedPython's compile_restricted()
+was evaluated and dropped: its `_write_`/`_getitem_` proxy guards raise on
+ordinary pandas mutation (`df['col'] = ...`), which is exactly what the
+AI-generated analysis code needs to do, so it is not fit for this workload.
 """
 
 from __future__ import annotations
@@ -21,15 +27,6 @@ import pandas as pd
 from config.settings import CONFIG
 
 logger = logging.getLogger(__name__)
-
-try:
-    from RestrictedPython import compile_restricted
-    from RestrictedPython.Guards import guarded_getattr, guarded_getiter, safe_builtins
-
-    _HAS_RESTRICTED = True
-except ImportError:
-    logger.warning("RestrictedPython not installed — using AST-only sandbox.")
-    _HAS_RESTRICTED = False
 
 MAX_OUTPUT_CHARS = 4_000
 _IS_WINDOWS = platform.system() == "Windows"
@@ -66,6 +63,18 @@ _BLOCKED_NAMES = frozenset(
         "ctypes",
         "pickle",
         "marshal",
+        # Introspection builtins that can reach dunder attributes (e.g.
+        # __class__, __bases__, __subclasses__, __globals__) via a string
+        # argument, bypassing the AST check on literal `.__dunder__` access.
+        "getattr",
+        "setattr",
+        "delattr",
+        "vars",
+        "globals",
+        "locals",
+        "dir",
+        "breakpoint",
+        "super",
     }
 )
 
@@ -161,14 +170,11 @@ def _build_safe_scope(df: pd.DataFrame) -> dict:
         "type": type,
     }
 
-    if _HAS_RESTRICTED:
-        scope.update(
-            {
-                "_getattr_": guarded_getattr,
-                "_getiter_": guarded_getiter,
-                "__builtins__": safe_builtins,
-            }
-        )
+    # exec() would otherwise auto-inject the real builtins module, defeating
+    # _BLOCKED_NAMES entirely (e.g. __import__, getattr-chains to
+    # __subclasses__, etc). An empty __builtins__ mapping means only names
+    # explicitly listed above are reachable.
+    scope["__builtins__"] = {}
 
     return scope
 
@@ -269,28 +275,16 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
     buffer = StringIO()
 
     # Compile
-    if _HAS_RESTRICTED:
-        try:
-            byte_code = compile_restricted(cleaned, filename="<ai_code>", mode="exec")
-        except SyntaxError as e:
-            return ExecResult(
-                success=False,
-                output="",
-                figure=None,
-                error=f"Compilation error: {e}",
-                code_executed=cleaned,
-            )
-    else:
-        try:
-            byte_code = compile(cleaned, "<ai_code>", "exec")
-        except SyntaxError as e:
-            return ExecResult(
-                success=False,
-                output="",
-                figure=None,
-                error=f"Compilation error: {e}",
-                code_executed=cleaned,
-            )
+    try:
+        byte_code = compile(cleaned, "<ai_code>", "exec")
+    except SyntaxError as e:
+        return ExecResult(
+            success=False,
+            output="",
+            figure=None,
+            error=f"Compilation error: {e}",
+            code_executed=cleaned,
+        )
 
     # Execute with timeout
     try:
@@ -312,8 +306,6 @@ def execute_safe(code: str, df: pd.DataFrame) -> ExecResult:
     output = buffer.getvalue()
     if len(output) > MAX_OUTPUT_CHARS:
         output = output[:MAX_OUTPUT_CHARS] + "\n… (output truncated)"
-    if output.strip().startswith("{") and len(output) > 200:
-        output = ""
 
     return ExecResult(
         success=True,
