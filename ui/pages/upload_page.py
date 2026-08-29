@@ -69,6 +69,20 @@ def render() -> None:
                 ["mode", "unknown"],
             )
 
+        col_s3, col_s4 = st.columns(2)
+        with col_s3:
+            drop_constant = st.checkbox(
+                "Drop constant columns",
+                value=False,
+                help="Columns with only one unique value add no analytical value.",
+            )
+        with col_s4:
+            drop_ids = st.checkbox(
+                "Drop ID-like columns",
+                value=False,
+                help="High-cardinality columns that look like row identifiers.",
+            )
+
         if profile is None:
             profile = profile_dataframe(df)
 
@@ -78,6 +92,8 @@ def render() -> None:
                 profile=profile,
                 numeric_strategy=num_strategy,
                 categorical_strategy=cat_strategy,
+                drop_constant_columns=drop_constant,
+                drop_id_columns=drop_ids,
             )
             st.session_state.clean_result = clean_result
             # Keep old session key for any legacy code

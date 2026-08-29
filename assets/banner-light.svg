@@ -1,0 +1,36 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Excel Auto-Analyst">
+  <defs>
+    <linearGradient id="bgL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F6F7F9"/>
+      <stop offset="100%" stop-color="#EDF2F1"/>
+    </linearGradient>
+    <linearGradient id="barL" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#0D9488"/>
+      <stop offset="100%" stop-color="#2DD4BF"/>
+    </linearGradient>
+    <pattern id="gridL" width="26" height="26" patternUnits="userSpaceOnUse">
+      <path d="M 26 0 L 0 0 0 26" fill="none" stroke="#0F766E" stroke-opacity="0.08" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#bgL)"/>
+  <rect x="760" y="0" width="440" height="300" fill="url(#gridL)"/>
+
+  <!-- wordmark -->
+  <text x="64" y="132" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="56" font-weight="700" fill="#0F172A" letter-spacing="-1">Excel Auto-Analyst</text>
+  <rect x="66" y="150" width="118" height="6" rx="3" fill="#0D9488"/>
+
+  <!-- tagline -->
+  <text x="64" y="196" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="21" fill="#5B6478">Upload &#8594; Clean &#8594; Analyze &#8594; Chat &#8594; Export</text>
+  <text x="64" y="228" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="15" fill="#8590A6">Open-source data analytics for any spreadsheet — no code required</text>
+
+  <!-- abstract chart glyph -->
+  <g>
+    <rect x="860" y="176" width="34" height="70" rx="4" fill="url(#barL)" opacity="0.55"/>
+    <rect x="908" y="140" width="34" height="106" rx="4" fill="url(#barL)" opacity="0.75"/>
+    <rect x="956" y="100" width="34" height="146" rx="4" fill="url(#barL)"/>
+    <rect x="1004" y="122" width="34" height="124" rx="4" fill="url(#barL)" opacity="0.85"/>
+    <polyline points="877,168 925,130 973,86 1021,108" fill="none" stroke="#0F172A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+    <circle cx="1021" cy="108" r="6" fill="#0F172A"/>
+  </g>
+</svg>

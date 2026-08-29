@@ -45,9 +45,20 @@ def render() -> None:
 
     # ── KPI Cards (same as original) ─────────────────────────────
     st.subheader("Key Performance Indicators")
-    metric_col = st.selectbox("Select Key Metric for KPIs:", num_cols, index=0)
+    kpi_col1, kpi_col2 = st.columns(2)
+    with kpi_col1:
+        metric_col = st.selectbox("Select Key Metric for KPIs:", num_cols, index=0)
+    date_col = None
+    if profile.datetime_columns:
+        with kpi_col2:
+            date_choice = st.selectbox(
+                "Date column (for Month-over-Month):",
+                ["None", *profile.datetime_columns],
+                key="dash_date_col",
+            )
+            date_col = None if date_choice == "None" else date_choice
 
-    kpi = compute_kpis(df, metric_col)
+    kpi = compute_kpis(df, metric_col, date_col)
     kpi1, kpi2, kpi3 = st.columns(3)
     kpi1.metric("Total Sum", f"{kpi.total:,.2f}")
     kpi2.metric("Average", f"{kpi.mean:,.2f}")
